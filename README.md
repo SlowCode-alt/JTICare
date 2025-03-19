@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Halo
 =======
 # project_akhir_donasi_android
