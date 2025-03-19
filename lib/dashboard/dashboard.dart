@@ -11,6 +11,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 }
+
 class BottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
