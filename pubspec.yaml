@@ -1,0 +1,35 @@
+name: project_akhir_donasi_android
+description: "A new Flutter project."
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  logo: ^1.2.1
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logojticare.png
+    - assets/jticarebiru.png
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/POPPINS-REGULAR.TTF
+        - asset: assets/fonts/POPPINS-BOLD.TTF
+          weight: 700
