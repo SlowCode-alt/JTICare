@@ -26,7 +26,10 @@ flutter:
   assets:
     - assets/logojticare.png
     - assets/jticarebiru.png
-
+    - assets/home.png
+    - assets/bell.png
+    - assets/give.png
+    - assets/profile.png
   fonts:
     - family: Poppins
       fonts:

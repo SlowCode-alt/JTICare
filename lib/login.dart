@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:project_akhir_donasi_android/screen/forgot_password_screen.dart';
-import 'register.dart';
 import 'package:project_akhir_donasi_android/dashboard/dashboard.dart';
+import 'package:project_akhir_donasi_android/register.dart';
+import 'package:project_akhir_donasi_android/screen/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -40,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       "Login",
                       style: TextStyle(
-                        fontFamily: 'Poppins',
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -57,8 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Row(
                           children: [
-                            const Text("Belum punya akun? ",
-                                style: TextStyle(color: Colors.black)),
+                            const Text("Belum punya akun? "),
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
@@ -109,6 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (_formKey.currentState!.validate()) {
                     print("Login berhasil");
 
+                    // Navigasi ke Dashboard
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -120,10 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 15),
-                  elevation: 5, // Tambahkan shadow
-                  shadowColor: Colors.black.withOpacity(0.5), // Warna shadow
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15), // Tambahkan radius
+                    borderRadius: BorderRadius.circular(15),
                   ),
                 ),
                 child: const Text(
@@ -131,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold, // Tambahkan ketebalan
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
