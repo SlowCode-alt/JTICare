@@ -30,6 +30,11 @@ flutter:
     - assets/bell.png
     - assets/give.png
     - assets/profile.png
+    - assets/bell_warna.png
+    - assets/give_warna.png
+    - assets/profile_warna.png
+    - assets/home_warna.png
+    - assets/ic_donasi.png
   fonts:
     - family: Poppins
       fonts:
