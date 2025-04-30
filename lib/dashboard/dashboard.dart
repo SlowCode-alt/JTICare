@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profil.dart';  // Pastikan ini sesuai dengan path file profil.dart
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -109,13 +110,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
     Center(child: Text("Notifikasi")),
     Center(child: Text("Donasi")),
-    Center(child: Text("Profil")),
+    ProfilePage(),  // Halaman Profil yang muncul ketika memilih menu Profil
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+
+    // Cek jika profil dipilih, ganti konten, jangan navigasi full screen
+    if (index == 3) {  // Jika menu Profil dipilih
+      setState(() {
+        _selectedIndex = 3;  // Pindah ke halaman Profil dalam list
+      });
+    }
   }
 
   @override
