@@ -1,0 +1,2 @@
+C:/src/project/JTICare/android/app/.cxx/Debug/6o3v6926/x86_64/CMakeFiles/edit_cache.dir
+C:/src/project/JTICare/android/app/.cxx/Debug/6o3v6926/x86_64/CMakeFiles/rebuild_cache.dir
