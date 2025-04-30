@@ -71,6 +71,9 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
+              // Menambahkan padding di bagian atas
+              SizedBox(height: 40), // Menambah ruang kosong di atas layar
+
               // Profile Section with smooth border radius
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 20),
