@@ -36,6 +36,7 @@ flutter:
     - assets/profile_warna.png
     - assets/home_warna.png
     - assets/ic_donasi.png
+    - assets/profile_picture.png
   fonts:
     - family: Poppins
       fonts:
