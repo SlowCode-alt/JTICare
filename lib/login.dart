@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/dashboard/dashboard.dart';
 import 'package:project_akhir_donasi_android/register.dart';
 import 'package:project_akhir_donasi_android/screen/forgot_password_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:project_akhir_donasi_android/API/api_config.dart';  // Impor ApiService
+import 'package:project_akhir_donasi_android/API/user_response.dart'; // Import UserResponse
+import 'package:http/http.dart' as http; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,6 +20,59 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  // Function to handle login
+  Future<void> _login() async {
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    if (_formKey.currentState!.validate()) {
+      try {
+        // Build URL for login endpoint using ApiConfig
+        Uri loginUrl = ApiConfig.buildUrl("login");
+
+        // Send the POST request to the login endpoint
+        final response = await http.post(
+          loginUrl,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'email': email, 'password': password}),
+        );
+
+        // Decode response from the server
+        final responseData = jsonDecode(response.body);
+
+        // If response status is success, proceed to save token and user data
+        if (response.statusCode == 200 && responseData['message'] == 'Login berhasil') {
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString('token', responseData['token']);  // Save token
+          prefs.setString('email', email);
+          prefs.setString('fullname', responseData['user']['nama_lengkap']);  // Correct field
+
+          // Navigate to the dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DashboardScreen()),
+          );
+        } else {
+          // Show error message if login fails
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login failed: ${responseData['message']}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        // Show error message in case of any exception
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,34 +150,11 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    final prefs = await SharedPreferences.getInstance();
-                    final savedEmail = prefs.getString('email') ?? '';
-                    final savedPassword = prefs.getString('password') ?? '';
-
-                    if (_emailController.text == savedEmail &&
-                        _passwordController.text == savedPassword) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => DashboardScreen()),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Email atau Kata Sandi salah'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
+                onPressed: _login, // Update to call the _login function
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 ),
                 child: const Text("Masuk",
                     style: TextStyle(
