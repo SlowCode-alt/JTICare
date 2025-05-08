@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:project_akhir_donasi_android/dashboard/profil.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/profil.dart';
+import 'package:project_akhir_donasi_android/dashboard/donasi_saya/donasisaya.dart';
 
 class DonasiCard extends StatelessWidget {
   final String gambar;
@@ -95,6 +96,8 @@ class DonasiCard extends StatelessWidget {
 }
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
@@ -148,9 +151,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _screens.addAll([
       _buildHomeScreen(),
-      const Center(child: Text("Donasi")),
+      const DonasiSayaPage(),
       const Center(child: Text("Notifikasi")),
-      const ProfilePage(), // Ganti dari Text("Profil") ke halaman ProfilePage
+      // const ProfilePage(), // Ganti dari Text("Profil") ke halaman ProfilePage
     ]);
   }
 

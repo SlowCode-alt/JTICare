@@ -14,7 +14,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _whatsappController = TextEditingController();
 
   // Gambar profil yang bisa diganti
-  AssetImage _profileImage = AssetImage('assets/profile_picture.png'); 
+  final AssetImage _profileImage = AssetImage('assets/profile_picture.png');
 
   @override
   void initState() {
@@ -61,7 +61,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Nama Lengkap
             TextField(
               controller: _nameController,
@@ -101,7 +101,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Ganti primary dengan backgroundColor
+                backgroundColor:
+                    Colors.blue, // Ganti primary dengan backgroundColor
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -109,7 +110,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
               child: const Text(
                 "Simpan Perubahan",
-                style: TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ],

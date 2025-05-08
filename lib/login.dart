@@ -5,6 +5,8 @@ import 'package:project_akhir_donasi_android/screen/forgot_password_screen.dart'
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -35,11 +37,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    const Text("Login", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text("Login",
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
-                    buildTextField("Email", "Masukkan Email Anda", _emailController),
+                    buildTextField(
+                        "Email", "Masukkan Email Anda", _emailController),
                     const SizedBox(height: 15),
-                    buildPasswordField("Kata Sandi", "Masukkan Kata Sandi Anda", _passwordController),
+                    buildPasswordField("Kata Sandi", "Masukkan Kata Sandi Anda",
+                        _passwordController),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -49,17 +55,31 @@ class _LoginScreenState extends State<LoginScreen> {
                             const Text("Belum punya akun? "),
                             GestureDetector(
                               onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            RegisterScreen()));
                               },
-                              child: const Text("Daftar", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                              child: const Text("Daftar",
+                                  style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordScreen()));
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        ForgotPasswordScreen()));
                           },
-                          child: const Text("Lupa Kata Sandi?", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                          child: const Text("Lupa Kata Sandi?",
+                              style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -83,7 +103,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         _passwordController.text == savedPassword) {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => DashboardScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => DashboardScreen()),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,9 +119,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15)),
                 ),
-                child: const Text("Masuk", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text("Masuk",
+                    style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold)),
               ),
             ),
           ),
@@ -109,7 +135,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget buildTextField(String label, String hint, TextEditingController controller) {
+  Widget buildTextField(
+      String label, String hint, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -135,7 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget buildPasswordField(String label, String hint, TextEditingController controller) {
+  Widget buildPasswordField(
+      String label, String hint, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -148,7 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
             hintText: hint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             suffixIcon: IconButton(
-              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+              icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey),
               onPressed: () {
                 setState(() {
                   _obscurePassword = !_obscurePassword;

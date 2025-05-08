@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../login.dart'; // pastikan path ini sesuai
+import '../../login.dart'; // pastikan path ini sesuai
 import 'edit_profil.dart'; // Import halaman EditProfilePage
 import 'pengaturan_akun.dart';
 
@@ -80,7 +80,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.blue, // Blue background for profile section
-                  borderRadius: BorderRadius.circular(30), // Smooth border radius
+                  borderRadius:
+                      BorderRadius.circular(30), // Smooth border radius
                 ),
                 child: Column(
                   children: [
@@ -91,7 +92,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           padding: const EdgeInsets.only(left: 20),
                           child: CircleAvatar(
                             radius: 45,
-                            backgroundImage: AssetImage('assets/profile_picture.png'), // Ganti dengan foto profil yang sebenarnya
+                            backgroundImage: AssetImage(
+                                'assets/profile_picture.png'), // Ganti dengan foto profil yang sebenarnya
                           ),
                         ),
                         const SizedBox(width: 20),
@@ -144,18 +146,23 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildMenuBox(Icons.edit, "Edit Profil", () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => EditProfilePage()), // Navigate to EditProfilePage
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                EditProfilePage()), // Navigate to EditProfilePage
                       );
                     }),
                     _buildMenuBox(Icons.settings, "Pengaturan Akun", () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => PengaturanAkunPage()), // Navigate to PengaturanAkunPage
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                PengaturanAkunPage()), // Navigate to PengaturanAkunPage
                       );
                     }),
                     const Text(
                       "Lainnya",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(height: 10),
                     _buildMenuBox(Icons.question_answer, "FAQ", () {}),
@@ -197,7 +204,8 @@ class _ProfilePageState extends State<ProfilePage> {
         title,
         style: const TextStyle(fontWeight: FontWeight.w500),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      trailing:
+          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
     );
   }

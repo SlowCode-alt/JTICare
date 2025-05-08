@@ -5,6 +5,8 @@ class OtpScreen extends StatelessWidget {
   final List<TextEditingController> otpControllers =
       List.generate(5, (index) => TextEditingController());
 
+  OtpScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

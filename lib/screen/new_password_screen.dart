@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/widget/password_field.dart';
 
 class NewPasswordScreen extends StatefulWidget {
+  const NewPasswordScreen({super.key});
+
   @override
   _NewPasswordScreenState createState() => _NewPasswordScreenState();
 }

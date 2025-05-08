@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/login.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:project_akhir_donasi_android/API/api_config.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -13,7 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -23,7 +28,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Logo
           Expanded(
             flex: 1,
             child: Align(
@@ -31,8 +35,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Image.asset('assets/jticarebiru.png', height: 100),
             ),
           ),
-
-          // Form Registrasi
           Expanded(
             flex: 3,
             child: SingleChildScrollView(
@@ -41,37 +43,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    const Text("Registrasi", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text("Registrasi",
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
-                    buildTextField("Nama Lengkap", "Masukkan Nama Lengkap Anda", _nameController),
+                    buildTextField("Nama Lengkap", "Masukkan Nama Lengkap Anda",
+                        _nameController),
                     const SizedBox(height: 15),
-                    buildTextField("Email", "Masukkan Email Anda", _emailController),
+                    buildTextField(
+                        "Email", "Masukkan Email Anda", _emailController),
                     const SizedBox(height: 15),
-                    buildTextField("Nomor WhatsApp", "Masukkan Nomor WhatsApp Anda", _phoneController),
+                    buildTextField("Nomor WhatsApp",
+                        "Masukkan Nomor WhatsApp Anda", _phoneController),
                     const SizedBox(height: 15),
-                    buildPasswordField("Kata Sandi", "Masukkan Kata Sandi Anda", _passwordController, _obscurePassword, () {
+                    buildPasswordField("Kata Sandi", "Masukkan Kata Sandi Anda",
+                        _passwordController, _obscurePassword, () {
                       setState(() {
                         _obscurePassword = !_obscurePassword;
                       });
                     }),
                     const SizedBox(height: 15),
-                    buildPasswordField("Konfirmasi Kata Sandi", "Ulangi Kata Sandi Anda", _confirmPasswordController, _obscureConfirmPassword, () {
+                    buildPasswordField(
+                        "Konfirmasi Kata Sandi",
+                        "Ulangi Kata Sandi Anda",
+                        _confirmPasswordController,
+                        _obscureConfirmPassword, () {
                       setState(() {
                         _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     }),
                     const SizedBox(height: 10),
-
-                    // Sudah punya akun?
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text("Sudah punya akun? "),
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginScreen()),
+                            );
                           },
-                          child: const Text("Masuk", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                          child: const Text("Masuk",
+                              style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -80,8 +97,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
-
-          // Tombol Daftar
           Padding(
             padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
             child: Container(
@@ -102,19 +117,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setString('fullname', _nameController.text);
-                      await prefs.setString('email', _emailController.text);
-                      await prefs.setString('password', _passwordController.text);
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Registrasi berhasil! Silakan login.")),
+                      final Uri url = ApiConfig.buildUrl("register");
+                      print(url); // Debugging URL
+                      final response = await http.post(
+                        url,
+                        headers: {
+                          'Accept': 'application/json',
+                          'Content-Type': 'application/json',
+                        },
+                        body: json.encode({
+                          "nama_lengkap": _nameController.text,
+                          "email": _emailController.text,
+                          "password": _passwordController.text,
+                          "confirm": _confirmPasswordController.text,
+                          "no_whatsapp": _phoneController.text,
+                        }),
                       );
 
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                      );
+                      final result = json.decode(response.body);
+
+                      if (response.statusCode == 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(result["message"])),
+                        );
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => LoginScreen()),
+                        );
+                      } else {
+                        String message =
+                            result['message'] ?? 'Registrasi gagal';
+                        if (result is Map && result.containsKey('errors')) {
+                          final errors =
+                              result['errors'] as Map<String, dynamic>;
+                          message = errors.values.first[0];
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(message)),
+                        );
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -127,7 +170,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: const Text(
                     "Daftar",
-                    style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -138,7 +184,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget buildTextField(String label, String hint, TextEditingController controller) {
+  Widget buildTextField(
+      String label, String hint, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -146,7 +193,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 5),
         TextFormField(
           controller: controller,
-          keyboardType: label == "Nomor WhatsApp" ? TextInputType.phone : TextInputType.text,
+          keyboardType: label == "Nomor WhatsApp"
+              ? TextInputType.phone
+              : TextInputType.text,
           decoration: InputDecoration(
             hintText: hint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -187,13 +236,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             hintText: hint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             suffixIcon: IconButton(
-              icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+              icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey),
               onPressed: toggle,
             ),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return "$label tidak boleh kosong";
+            } else if (label == "Kata Sandi" && value.length < 6) {
+              return "Kata sandi minimal 6 karakter";
             } else if (label == "Konfirmasi Kata Sandi" &&
                 value != _passwordController.text) {
               return "Kata sandi tidak cocok";
