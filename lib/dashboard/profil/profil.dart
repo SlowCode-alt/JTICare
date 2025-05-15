@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../login.dart'; // pastikan path ini sesuai
-import 'edit_profil.dart'; // Import halaman EditProfilePage
+import '../../login.dart'; // Ensure the path is correct
+import 'edit_profil.dart'; // Import EditProfilePage
 import 'pengaturan_akun.dart';
+import '../../utils/TokenManager.dart';  // Import TokenManager
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -21,6 +22,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadProfileData();
   }
 
+  // Load profile data from SharedPreferences
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -29,17 +31,24 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  // Logout and remove token
   Future<void> _logout(BuildContext context) async {
+    // Remove token using TokenManager
+    await TokenManager.removeToken();
+
+    // Clear SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
 
+    // Navigate to Login Screen
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (route) => false,
+      (route) => false, // Remove all routes
     );
   }
 
+  // Show confirmation dialog for logout
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -48,13 +57,13 @@ class _ProfilePageState extends State<ProfilePage> {
         content: const Text("Apakah Anda yakin ingin keluar?"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(), // Cancel
             child: const Text("Batal"),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _logout(context);
+              _logout(context); // Logout on confirm
             },
             child: const Text("Keluar"),
           ),
@@ -165,7 +174,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: InkWell(
-                  onTap: () => _showLogoutConfirmation(context),
+                  onTap: () => _showLogoutConfirmation(context), // Call confirmation
                   child: Row(
                     children: const [
                       Icon(Icons.logout, color: Colors.red),

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:project_akhir_donasi_android/API/api_config.dart';  // Impor ApiService
 import 'package:project_akhir_donasi_android/API/user_response.dart'; // Import UserResponse
 import 'package:http/http.dart' as http; 
+import '../utils/TokenManager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,9 +45,11 @@ class _LoginScreenState extends State<LoginScreen> {
         // If response status is success, proceed to save token and user data
         if (response.statusCode == 200 && responseData['message'] == 'Login berhasil') {
           final prefs = await SharedPreferences.getInstance();
-          prefs.setString('token', responseData['token']);  // Save token
           prefs.setString('email', email);
           prefs.setString('fullname', responseData['user']['nama_lengkap']);  // Correct field
+
+          // Save the token using TokenManager
+          TokenManager.saveToken(responseData['token']); // Save token
 
           // Navigate to the dashboard
           Navigator.pushReplacement(
