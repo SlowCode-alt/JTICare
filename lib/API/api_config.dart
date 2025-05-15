@@ -12,6 +12,11 @@ class ApiConfig {
     }
   }
 
+  // Menambahkan URL untuk gambar
+  static String get imageBaseUrl {
+    return '$baseUrl/gambar_donasi/';  // Menambahkan path gambar
+  }
+
   static Uri buildUrl(String endpoint) {
     return Uri.parse('$baseUrl/api/$endpoint');
   }

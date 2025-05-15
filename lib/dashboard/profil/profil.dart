@@ -35,7 +35,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
       (route) => false,
     );
   }
@@ -71,21 +71,18 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              // Menambahkan padding di bagian atas
-              SizedBox(height: 40), // Menambah ruang kosong di atas layar
+              SizedBox(height: 40), // Padding to give space at the top
 
-              // Profile Section with smooth border radius
+              // Profile Section
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.blue, // Blue background for profile section
-                  borderRadius:
-                      BorderRadius.circular(30), // Smooth border radius
+                  borderRadius: BorderRadius.circular(30), // Smooth border radius
                 ),
                 child: Column(
                   children: [
-                    // Profile Picture and Name
                     Row(
                       children: [
                         Padding(
@@ -93,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: CircleAvatar(
                             radius: 45,
                             backgroundImage: AssetImage(
-                                'assets/profile_picture.png'), // Ganti dengan foto profil yang sebenarnya
+                                'assets/profile_picture.png'), // Change with real profile picture
                           ),
                         ),
                         const SizedBox(width: 20),
@@ -125,7 +122,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 20),
 
-              // Container for Menu Box with Drop Shadow
+              // Menu Box with Drop Shadow
               Container(
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
@@ -136,33 +133,27 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.black.withOpacity(0.1),
                       spreadRadius: 2,
                       blurRadius: 10,
-                      offset: const Offset(0, 4), // Position the shadow
+                      offset: const Offset(0, 4), // Shadow position
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    // Update "Edit Profil" button to navigate to EditProfilePage
                     _buildMenuBox(Icons.edit, "Edit Profil", () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                EditProfilePage()), // Navigate to EditProfilePage
+                        MaterialPageRoute(builder: (context) => const EditProfilePage()),
                       );
                     }),
                     _buildMenuBox(Icons.settings, "Pengaturan Akun", () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                PengaturanAkunPage()), // Navigate to PengaturanAkunPage
+                        MaterialPageRoute(builder: (context) => const PengaturanAkunPage()),
                       );
                     }),
                     const Text(
                       "Lainnya",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(height: 10),
                     _buildMenuBox(Icons.question_answer, "FAQ", () {}),
@@ -204,8 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
         title,
         style: const TextStyle(fontWeight: FontWeight.w500),
       ),
-      trailing:
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
     );
   }
