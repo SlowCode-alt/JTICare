@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'package:project_akhir_donasi_android/API/api_config.dart';
 
 class Donasi {
   final int id;
@@ -9,11 +10,11 @@ class Donasi {
   final double targetDana;
   final int jumlahDonatur;
   final double donasiTerkumpul;
-  final String deadline;
+  final String? deadline;
   final String tanggalBuat;
   final String status;
-  final String createdAt;
-  final String updatedAt;
+  final String? createdAt;
+  final String? updatedAt;
 
   Donasi({
     required this.id,
@@ -24,35 +25,41 @@ class Donasi {
     required this.targetDana,
     required this.jumlahDonatur,
     required this.donasiTerkumpul,
-    required this.deadline,
+    this.deadline,
     required this.tanggalBuat,
     required this.status,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  // Modify the fromJson factory to append the image path with the base URL
   factory Donasi.fromJson(Map<String, dynamic> json) {
-    // Create the full image path
-    String fullImageUrl = 'http://10.0.2.2:8000/storage/${json['gambar']}';
+    try {
+      final baseUrl = ApiConfig.baseUrl;
+      final imagePath = json['gambar']?.toString() ?? '';
+      final fullImageUrl = imagePath.isNotEmpty 
+          ? '$baseUrl/storage/$imagePath' 
+          : '';
 
-    // Log the full image URL
-    developer.log('Generated image URL: $fullImageUrl', name: 'API');
+      developer.log('Generated image URL: $fullImageUrl', name: 'API');
 
-    return Donasi(
-      id: json['id'],
-      idUser: json['id_user'],
-      judulDonasi: json['judul_donasi'],
-      gambar: fullImageUrl,  // Use the generated full image URL
-      deskripsi: json['deskripsi'],
-      targetDana: double.parse(json['target_dana']),
-      jumlahDonatur: json['jumlah_donatur'],
-      donasiTerkumpul: double.parse(json['donasi_terkumpul']),
-      deadline: json['dedline'] ?? '',  // Handle null
-      tanggalBuat: json['tanggal_buat'] ?? '',  // Handle null
-      status: json['status'] ?? '',
-      createdAt: json['created_at'] ?? '',  // Handle null
-      updatedAt: json['updated_at'] ?? '',  // Handle null
-    );
+      return Donasi(
+        id: json['id'] as int? ?? 0,
+        idUser: json['id_user'] as int? ?? 0,
+        judulDonasi: json['judul_donasi']?.toString() ?? 'No Title',
+        gambar: fullImageUrl,
+        deskripsi: json['deskripsi']?.toString() ?? 'No Description',
+        targetDana: double.tryParse(json['target_dana']?.toString() ?? '0') ?? 0,
+        jumlahDonatur: json['jumlah_donatur'] as int? ?? 0,
+        donasiTerkumpul: double.tryParse(json['donasi_terkumpul']?.toString() ?? '0') ?? 0,
+        deadline: json['deadline']?.toString() ?? json['dedline']?.toString(),
+        tanggalBuat: json['tanggal_buat']?.toString() ?? DateTime.now().toString(),
+        status: json['status']?.toString() ?? 'unknown',
+        createdAt: json['created_at']?.toString(),
+        updatedAt: json['updated_at']?.toString(),
+      );
+    } catch (e) {
+      developer.log('Error parsing Donasi: $e', name: 'API', error: e);
+      throw FormatException('Failed to parse Donasi: $e');
+    }
   }
 }

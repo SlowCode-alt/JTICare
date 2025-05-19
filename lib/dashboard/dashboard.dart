@@ -6,6 +6,7 @@ import '../models/donasi_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'donasi_detail.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -99,8 +100,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
@@ -195,8 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       itemCount: donasiList.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
@@ -204,28 +203,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       itemBuilder: (context, index) {
                         final donasi = donasiList[index];
-
-                        // Validasi supaya targetDana != 0 dan hasil persen valid
+                        
                         int persen = 0;
                         if (donasi.targetDana != 0) {
-                          double tempPersen =
-                              (donasi.donasiTerkumpul / donasi.targetDana) *
-                                  100;
-                          if (tempPersen.isFinite) {
-                            persen = tempPersen.toInt();
-                            if (persen > 100) persen = 100; // Maksimal 100%
-                            if (persen < 0) persen = 0; // Minimal 0%
-                          }
+                          double tempPersen = (donasi.donasiTerkumpul / donasi.targetDana) * 100;
+                          persen = tempPersen.toInt();
+                          if (persen > 100) persen = 100;
+                          if (persen < 0) persen = 0;
                         }
 
-                        return DonasiCard(
-                          gambar: donasi.gambar,
-                          tanggal: donasi.tanggalBuat,
-                          judul: donasi.judulDonasi,
-                          deskripsi: donasi.deskripsi,
-                          terkumpul: donasi.donasiTerkumpul.toString(),
-                          target: donasi.targetDana.toString(),
-                          persen: persen,
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DonasiDetailPage(donasi: donasi),
+                              ),
+                            );
+                          },
+                          child: DonasiCard(
+                            id: donasi.id.toString(),
+                            gambar: donasi.gambar,
+                            tanggal: donasi.tanggalBuat,
+                            judul: donasi.judulDonasi,
+                            deskripsi: donasi.deskripsi,
+                            terkumpul: donasi.donasiTerkumpul.toStringAsFixed(0),
+                            target: donasi.targetDana.toStringAsFixed(0),
+                            persen: persen,
+                          ),
                         );
                       },
                     ),
@@ -290,6 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class DonasiCard extends StatelessWidget {
+  final String id;
   final String gambar;
   final String tanggal;
   final String judul;
@@ -300,6 +306,7 @@ class DonasiCard extends StatelessWidget {
 
   const DonasiCard({
     super.key,
+    required this.id,
     required this.gambar,
     required this.tanggal,
     required this.judul,
@@ -344,8 +351,7 @@ class DonasiCard extends StatelessWidget {
                     children: [
                       Icon(Icons.error_outline, color: Colors.red),
                       SizedBox(height: 4),
-                      Text('Gagal memuat gambar',
-                          style: TextStyle(fontSize: 10)),
+                      Text('Gagal memuat gambar', style: TextStyle(fontSize: 10)),
                     ],
                   ),
                 ),
