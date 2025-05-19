@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/donasi_model.dart';
+import 'Donasi_Screen.dart';
 
 class DonasiDetailPage extends StatelessWidget {
   final Donasi donasi;
@@ -108,8 +109,14 @@ class DonasiDetailPage extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                 // In the ElevatedButton's onPressed handler:
                   onPressed: () {
-                    // Handle donation button press
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DonasiScreen(donasi: donasi), // Directly pass the Donasi object
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
