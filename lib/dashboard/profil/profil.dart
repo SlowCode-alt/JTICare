@@ -1,210 +1,222 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/edit_profil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../login.dart'; // Ensure the path is correct
-import 'edit_profil.dart'; // Import EditProfilePage
-import 'pengaturan_akun.dart';
-import '../../utils/TokenManager.dart';  // Import TokenManager
+import 'package:project_akhir_donasi_android/login.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/faq.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/pengaturanakun.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/tentangkami.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/hubungikami.dart';
+import 'package:project_akhir_donasi_android/api/api_config.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  String _fullName = '';
-  String _email = '';
+class _ProfileScreenState extends State<ProfileScreen> {
+  String fullname = '';
+  String email = '';
+  String imageUrl = '';
+  bool isLoading = true;
+  final String baseImageUrl = ApiConfig.imageBaseUrl;
 
   @override
   void initState() {
     super.initState();
-    _loadProfileData();
+    _loadUserData();
   }
 
-  // Load profile data from SharedPreferences
-  Future<void> _loadProfileData() async {
+  Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final storedImage = prefs.getString('foto_profil') ?? '';
+
+    String finalImageUrl = '';
+    if (storedImage.isNotEmpty) {
+      if (storedImage.startsWith('http') || storedImage.startsWith('https')) {
+        finalImageUrl = storedImage;
+      } else if (storedImage.startsWith('file://')) {
+        finalImageUrl = storedImage;
+      } else {
+        finalImageUrl = baseImageUrl + storedImage;
+      }
+    }
+
+    if (!mounted) return;
     setState(() {
-      _fullName = prefs.getString('fullname') ?? 'Nama Tidak Ditemukan';
-      _email = prefs.getString('email') ?? 'Email Tidak Ditemukan';
+      fullname = prefs.getString('fullname') ?? 'Nama Pengguna';
+      email = prefs.getString('email') ?? 'email@example.com';
+      imageUrl = finalImageUrl;
+      isLoading = false;
     });
   }
 
-  // Logout and remove token
-  Future<void> _logout(BuildContext context) async {
-    // Remove token using TokenManager
-    await TokenManager.removeToken();
-
-    // Clear SharedPreferences
+  Future<void> logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
 
-    // Navigate to Login Screen
-    Navigator.pushAndRemoveUntil(
-      context,
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (route) => false, // Remove all routes
+      (route) => false,
     );
   }
 
-  // Show confirmation dialog for logout
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
+  Future<void> confirmLogout(BuildContext context) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Konfirmasi Logout"),
-        content: const Text("Apakah Anda yakin ingin keluar?"),
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah Anda yakin ingin logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(), // Cancel
-            child: const Text("Batal"),
+            onPressed: () => Navigator.of(context).pop(false), // batal
+            child: const Text('Batal'),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _logout(context); // Logout on confirm
-            },
-            child: const Text("Keluar"),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true), // setuju logout
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      await logout(context);
+    }
+  }
+
+  ImageProvider _getProfileImage() {
+    if (imageUrl.startsWith('file://')) {
+      return FileImage(File(imageUrl.replaceFirst('file://', '')));
+    } else if (imageUrl.isNotEmpty) {
+      return NetworkImage(imageUrl);
+    } else {
+      return const AssetImage('assets/profile_dummy.webp');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Profil")),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildProfileContent(),
+    );
+  }
+
+  Widget _buildProfileContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: const Color.fromRGBO(74, 171, 251, 1),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: _getProfileImage(),
+                  backgroundColor: Colors.grey[200],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(fullname,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(email,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 14)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Card(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
+            child: Column(
+              children: [
+                _buildMenuItem(Icons.person, "Edit Profil", () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const EditProfileScreen()),
+                  );
+                  _loadUserData();
+                }),
+                const Divider(),
+                _buildMenuItem(Icons.settings, "Pengaturan Akun", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const PengaturanAkunPage()),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text("Lainnya", style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Card(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
+            child: Column(
+              children: [
+                _buildMenuItem(Icons.help_outline, "FAQ", () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => const FAQPage()));
+                }),
+                const Divider(),
+                _buildMenuItem(Icons.info_outline, "Tentang Kami", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const TentangKamiPage()),
+                  );
+                }),
+                const Divider(),
+                _buildMenuItem(Icons.phone, "Hubungi Kami", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const HubungiKamiPage()),
+                  );
+                }),
+                const Divider(),
+                _buildMenuItem(Icons.logout, "Logout", () {
+                  confirmLogout(context); // tombol logout pakai konfirmasi
+                }),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              SizedBox(height: 40), // Padding to give space at the top
-
-              // Profile Section
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.blue, // Blue background for profile section
-                  borderRadius: BorderRadius.circular(30), // Smooth border radius
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: CircleAvatar(
-                            radius: 45,
-                            backgroundImage: AssetImage(
-                                'assets/profile_picture.png'), // Change with real profile picture
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _fullName,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              _email,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Menu Box with Drop Shadow
-              Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12), // Rounded corners
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4), // Shadow position
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _buildMenuBox(Icons.edit, "Edit Profil", () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const EditProfilePage()),
-                      );
-                    }),
-                    _buildMenuBox(Icons.settings, "Pengaturan Akun", () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const PengaturanAkunPage()),
-                      );
-                    }),
-                    const Text(
-                      "Lainnya",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildMenuBox(Icons.question_answer, "FAQ", () {}),
-                    _buildMenuBox(Icons.info_outline, "Tentang Kami", () {}),
-                    _buildMenuBox(Icons.phone, "Hubungi Kami", () {}),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: InkWell(
-                  onTap: () => _showLogoutConfirmation(context), // Call confirmation
-                  child: Row(
-                    children: const [
-                      Icon(Icons.logout, color: Colors.red),
-                      SizedBox(width: 10),
-                      Text(
-                        "Keluar",
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuBox(IconData icon, String title, Function() onTap) {
+  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, color: Colors.blue),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      title: Text(title),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
     );
   }

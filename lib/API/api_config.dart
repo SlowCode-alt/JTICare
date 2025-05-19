@@ -14,10 +14,30 @@ class ApiConfig {
 
   // Menambahkan URL untuk gambar
   static String get imageBaseUrl {
-    return '$baseUrl/gambar_donasi/';  // Menambahkan path gambar
+    return '$baseUrl/storage/profile_photos/'; // Menambahkan path gambar
   }
 
   static Uri buildUrl(String endpoint) {
     return Uri.parse('$baseUrl/api/$endpoint');
+  }
+
+  static Uri get updateProfileUrl {
+    return buildUrl('update-profile');
+  }
+
+  static Uri get updateProfileImageUrl {
+    return buildUrl('update-profile-image');
+  }
+
+  static Uri get ubahPasswordPengaturanAkunUrl {
+    return buildUrl('ubahPasswordProfile');
+  }
+
+  static Uri get deleteAccountPengaturanAkunUrl {
+    return buildUrl('deleteAccountProfile');
+  }
+
+  static Uri get sendEmailUrl {
+    return buildUrl('hubungi-kami');
   }
 }

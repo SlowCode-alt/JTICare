@@ -5,7 +5,6 @@ import 'package:project_akhir_donasi_android/dashboard/donasi_saya/donasisaya.da
 import '../models/donasi_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'package:cached_network_image/cached_network_image.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -27,53 +26,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _fetchKategoriDonasi();
   }
 
-  // Function to fetch kategori donasi data from API
   Future<void> _fetchKategoriDonasi() async {
     setState(() {
       isLoading = true;
       errorMessage = '';
     });
-    
+
     try {
       final url = ApiConfig.buildUrl('kategori-donasi');
-      developer.log('Generated URL: $url', name: 'API');
-      
       final response = await http.get(url);
-
-      developer.log('Response Status: ${response.statusCode}', name: 'API');
-      developer.log('Response Body: ${response.body}', name: 'API');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        developer.log('Parsed Data: $responseData', name: 'API');
-
         if (responseData['data'] != null) {
           final List<dynamic> donasiData = responseData['data'];
-          final List<Donasi> fetchedDonasi = donasiData.map((json) => Donasi.fromJson(json)).toList();
-          
-          setState(() {
-            donasiList = fetchedDonasi;
-            isLoading = false;
-          });
+          donasiList = donasiData.map((json) => Donasi.fromJson(json)).toList();
+          errorMessage = '';
         } else {
-          setState(() {
-            isLoading = false;
-            errorMessage = 'Data tidak ditemukan';
-          });
+          donasiList = [];
+          errorMessage = 'Data tidak ditemukan';
         }
       } else {
-        setState(() {
-          isLoading = false;
-          errorMessage = 'Gagal memuat data: ${response.statusCode}';
-        });
+        donasiList = [];
+        errorMessage = 'Gagal memuat data: ${response.statusCode}';
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Gagal memuat data: ${e.toString()}';
-      });
-      developer.log('Error fetching kategori donasi: $e', name: 'API');
+      donasiList = [];
+      errorMessage = 'Gagal memuat data: $e';
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void _onItemTapped(int index) {
@@ -82,7 +66,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  // Build the current screen based on selected index
   Widget _buildCurrentScreen() {
     switch (_selectedIndex) {
       case 0:
@@ -92,18 +75,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 2:
         return const Center(child: Text("Notifikasi"));
       case 3:
-        return const ProfilePage();
+        return const ProfileScreen();
       default:
         return _buildHomeScreen();
     }
   }
 
-  // Build the home screen to display kategori donasi
   Widget _buildHomeScreen() {
     return SingleChildScrollView(
       child: Stack(
         children: [
-          // Header dengan background biru
           Container(
             height: 190,
             decoration: BoxDecoration(
@@ -117,9 +98,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Search bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
@@ -144,8 +125,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          
-          // Card total donasi
           Positioned(
             top: 140,
             left: 24,
@@ -190,8 +169,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ),
-          
-          // Konten utama
           Padding(
             padding: const EdgeInsets.only(top: 230),
             child: Column(
@@ -205,8 +182,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
-                // Menampilkan loading/error/donasi
                 if (isLoading)
                   const Center(child: CircularProgressIndicator())
                 else if (errorMessage.isNotEmpty)
@@ -220,7 +195,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       itemCount: donasiList.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
@@ -228,14 +204,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       itemBuilder: (context, index) {
                         final donasi = donasiList[index];
+
+                        // Validasi supaya targetDana != 0 dan hasil persen valid
+                        int persen = 0;
+                        if (donasi.targetDana != 0) {
+                          double tempPersen =
+                              (donasi.donasiTerkumpul / donasi.targetDana) *
+                                  100;
+                          if (tempPersen.isFinite) {
+                            persen = tempPersen.toInt();
+                            if (persen > 100) persen = 100; // Maksimal 100%
+                            if (persen < 0) persen = 0; // Minimal 0%
+                          }
+                        }
+
                         return DonasiCard(
-                          gambar: donasi.gambar, // Using the model's full image URL
+                          gambar: donasi.gambar,
                           tanggal: donasi.tanggalBuat,
                           judul: donasi.judulDonasi,
                           deskripsi: donasi.deskripsi,
                           terkumpul: donasi.donasiTerkumpul.toString(),
                           target: donasi.targetDana.toString(),
-                          persen: (donasi.donasiTerkumpul / donasi.targetDana * 100).toInt(),
+                          persen: persen,
                         );
                       },
                     ),
@@ -309,6 +299,7 @@ class DonasiCard extends StatelessWidget {
   final int persen;
 
   const DonasiCard({
+    super.key,
     required this.gambar,
     required this.tanggal,
     required this.judul,
@@ -328,17 +319,16 @@ class DonasiCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gambar donasi dengan CachedNetworkImage
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: CachedNetworkImage(
-              imageUrl: gambar, // Displaying image from URL
+              imageUrl: gambar,
               height: 120,
               width: double.infinity,
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
                 color: Colors.grey[200],
-                child: Center(
+                child: const Center(
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
@@ -348,51 +338,39 @@ class DonasiCard extends StatelessWidget {
               errorWidget: (context, url, error) => Container(
                 height: 120,
                 color: Colors.grey[300],
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, color: Colors.red),
-                    SizedBox(height: 4),
-                    Text(
-                      'Gagal memuat gambar',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                  ],
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red),
+                      SizedBox(height: 4),
+                      Text('Gagal memuat gambar',
+                          style: TextStyle(fontSize: 10)),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-          
-          // Konten card
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  tanggal,
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                ),
+                Text(tanggal,
+                    style: const TextStyle(fontSize: 10, color: Colors.grey)),
                 const SizedBox(height: 4),
-                Text(
-                  judul,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Text(judul,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
-                Text(
-                  deskripsi,
-                  style: const TextStyle(fontSize: 12),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Text(deskripsi,
+                    style: const TextStyle(fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 8),
-                
-                // Progress bar
                 LinearProgressIndicator(
                   value: persen / 100,
                   backgroundColor: Colors.grey[200],
@@ -400,19 +378,12 @@ class DonasiCard extends StatelessWidget {
                   minHeight: 6,
                 ),
                 const SizedBox(height: 4),
-                
-                // Info dana terkumpul
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '$persen%',
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    Text(
-                      'Rp$terkumpul / Rp$target',
-                      style: const TextStyle(fontSize: 10),
-                    ),
+                    Text('$persen%', style: const TextStyle(fontSize: 10)),
+                    Text('Rp$terkumpul / Rp$target',
+                        style: const TextStyle(fontSize: 10)),
                   ],
                 ),
               ],

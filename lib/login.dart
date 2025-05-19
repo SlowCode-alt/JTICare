@@ -4,9 +4,8 @@ import 'package:project_akhir_donasi_android/dashboard/dashboard.dart';
 import 'package:project_akhir_donasi_android/register.dart';
 import 'package:project_akhir_donasi_android/screen/forgot_password_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:project_akhir_donasi_android/API/api_config.dart';  // Impor ApiService
-import 'package:project_akhir_donasi_android/API/user_response.dart'; // Import UserResponse
-import 'package:http/http.dart' as http; 
+import 'package:project_akhir_donasi_android/API/api_config.dart'; // Impor ApiService
+import 'package:http/http.dart' as http;
 import '../utils/TokenManager.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,54 +21,57 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  // Function to handle login
   Future<void> _login() async {
     String email = _emailController.text;
     String password = _passwordController.text;
 
     if (_formKey.currentState!.validate()) {
       try {
-        // Build URL for login endpoint using ApiConfig
         Uri loginUrl = ApiConfig.buildUrl("login");
 
-        // Send the POST request to the login endpoint
         final response = await http.post(
           loginUrl,
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'email': email, 'password': password}),
         );
 
-        // Decode response from the server
         final responseData = jsonDecode(response.body);
 
-        // If response status is success, proceed to save token and user data
-        if (response.statusCode == 200 && responseData['message'] == 'Login berhasil') {
+        if (response.statusCode == 200 &&
+            responseData['message'] == 'Login berhasil' &&
+            responseData['user'] != null) {
           final prefs = await SharedPreferences.getInstance();
-          prefs.setString('email', email);
-          prefs.setString('fullname', responseData['user']['nama_lengkap']);  // Correct field
+          await prefs.setString('token', responseData['token']);
+          await prefs.setString('email', responseData['user']['email']);
+          await prefs.setString(
+              'fullname', responseData['user']['nama_lengkap']);
+          await prefs.setString(
+              'whatsapp', responseData['user']['no_whatsapp'] ?? '');
+          await prefs.setString(
+              'foto_profil', responseData['user']['foto_profil'] ?? '');
 
-          // Save the token using TokenManager
-          TokenManager.saveToken(responseData['token']); // Save token
+          await TokenManager.saveToken(responseData['token']); // pakai await
 
-          // Navigate to the dashboard
+          // Optional: Clear fields
+          _emailController.clear();
+          _passwordController.clear();
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => DashboardScreen()),
           );
         } else {
-          // Show error message if login fails
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Login failed: ${responseData['message']}'),
+              content: Text('Login gagal: ${responseData['message']}'),
               backgroundColor: Colors.red,
             ),
           );
         }
       } catch (e) {
-        // Show error message in case of any exception
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('Terjadi kesalahan: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -157,7 +159,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15)),
                 ),
                 child: const Text("Masuk",
                     style: TextStyle(

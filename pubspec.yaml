@@ -17,6 +17,12 @@ dependencies:
   logo: ^1.2.1
   shared_preferences: ^2.5.3
   cached_network_image: ^3.3.0
+  path_provider: ^2.1.5
+  path: ^1.8.2
+  image_picker: ^0.8.7+4
+  url_launcher: ^6.1.10
+  video_player: ^2.7.0
+
 dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_test:
@@ -41,6 +47,11 @@ flutter:
     - assets/kebakaran.jpg
     - assets/gempa.jpg
     - assets/panti.jpg
+    - assets/profile_dummy.webp
+    - assets/profile_dummy2.png
+    - assets/splash1.png
+    - assets/splash2.png
+    - assets/splash3.png
 
   fonts:
     - family: Poppins
