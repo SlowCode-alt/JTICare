@@ -53,7 +53,7 @@ flutter:
     - assets/splash1.png
     - assets/splash2.png
     - assets/splash3.png
-
+    - assets/gif/splashgif.gif
   fonts:
     - family: Poppins
       fonts:

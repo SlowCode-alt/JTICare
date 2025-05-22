@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class IntroSplashScreen extends StatefulWidget {
   const IntroSplashScreen({super.key});
@@ -9,15 +10,15 @@ class IntroSplashScreen extends StatefulWidget {
 }
 
 class _IntroSplashScreenState extends State<IntroSplashScreen> {
-  PageController _controller = PageController();
+  final PageController _controller = PageController();
   int currentIndex = 0;
 
-  List<Map<String, String>> splashData = [
+  final List<Map<String, String>> splashData = [
     {
       "title": "Peduli Sesama",
       "desc":
           "JTIcare hadir untuk bantu warga JTI yang sedang dalam kesulitan.",
-      "image": "assets/splash1.png", // Ganti dengan gambar sesuai desain
+      "image": "assets/splash1.png",
     },
     {
       "title": "Donasi Aman & Mudah",
@@ -32,96 +33,143 @@ class _IntroSplashScreenState extends State<IntroSplashScreen> {
     },
   ];
 
-  void nextPage() {
-    if (currentIndex < splashData.length - 1) {
-      _controller.nextPage(
-          duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
-    }
+  Future<void> _finishIntro() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('introSeen', true);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              onPageChanged: (index) => setState(() => currentIndex = index),
-              itemCount: splashData.length,
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: TextButton(
-                        onPressed: () => Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => LoginScreen()),
+          PageView.builder(
+            controller: _controller,
+            onPageChanged: (index) => setState(() => currentIndex = index),
+            itemCount: splashData.length,
+            itemBuilder: (context, index) {
+              return Column(
+                children: [
+                  Expanded(
+                    flex: 6,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned(
+                          top: 60,
+                          child: Image.asset(
+                            'assets/gif/splashgif.gif',
+                            width: screenWidth * 0.9,
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        child: Text(currentIndex == splashData.length - 1
-                            ? "Selesai"
-                            : "Lewati"),
+                        Positioned(
+                          top: screenHeight * 0.1,
+                          child: Image.asset(
+                            splashData[index]['image']!,
+                            width: screenWidth * 0.55,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: ClipPath(
+                      clipper: BlueCurveClipper(),
+                      child: Container(
+                        width: double.infinity,
+                        color: const Color(0xFF29B6F6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 100),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              splashData[index]['title']!,
+                              style: const TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              splashData[index]['desc']!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Image.asset(splashData[index]["image"]!, height: 250),
-                    SizedBox(height: 30),
-                    Text(
-                      splashData[index]["title"]!,
-                      style:
-                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      splashData[index]["desc"]!,
-                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                  ),
+                ],
+              );
+            },
+          ),
+          Positioned(
+            top: 40,
+            right: 20,
+            child: TextButton(
+              onPressed: _finishIntro,
+              child: Text(
+                currentIndex == splashData.length - 1 ? "Selesai" : "Lewati",
+                style: const TextStyle(color: Colors.blue),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                splashData.length,
+                (index) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color:
+                        currentIndex == index ? Colors.white : Colors.white54,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              splashData.length,
-              (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 5),
-                width: currentIndex == index ? 12 : 8,
-                height: currentIndex == index ? 12 : 8,
-                decoration: BoxDecoration(
-                  color: currentIndex == index ? Colors.blue : Colors.grey,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: nextPage,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            ),
-            child: Text(currentIndex == splashData.length - 1
-                ? "Selesai"
-                : "Selanjutnya"),
-          ),
-          SizedBox(height: 40),
         ],
       ),
     );
   }
+}
+
+class BlueCurveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, 0);
+    path.quadraticBezierTo(size.width / 2, 50, size.width, 0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
