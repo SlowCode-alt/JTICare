@@ -42,6 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
             responseData['user'] != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('token', responseData['token']);
+          await prefs.setInt('user_id', responseData['user']['id']);
           await prefs.setString('email', responseData['user']['email']);
           await prefs.setString(
               'fullname', responseData['user']['nama_lengkap']);

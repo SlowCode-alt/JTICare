@@ -1,0 +1,9 @@
+subprojects { project ->
+    if (project.name == 'midtrans_sdk') {
+        project.plugins.withId('com.android.library') {
+            project.android {
+                namespace 'dev.tomykho.midtrans_sdk'
+            }
+        }
+    }
+}

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:project_akhir_donasi_android/API/midtrans_service.dart';
 import '../models/donasi_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'detail_transaksi.dart';
+
 
 class DonasiScreen extends StatefulWidget {
   final Donasi donasi;
@@ -17,6 +20,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
   String _userFullName = '';
   String _userEmail = '';
   String _userPhone = '';
+  String _userId = ''; // Tambahkan userId
   bool _isLoadingUserData = true;
   final TextEditingController _manualAmountController = TextEditingController();
   bool _isAnonymous = false;
@@ -29,14 +33,24 @@ class _DonasiScreenState extends State<DonasiScreen> {
   }
 
   Future<void> _loadUserData() async {
+  try {
     final prefs = await SharedPreferences.getInstance();
+    print('Mengambil data dari SharedPreferences...');
+    final userId = prefs.getInt('user_id'); // BUKAN getString
+    print('User ID: $userId');
+
     setState(() {
       _userFullName = prefs.getString('fullname') ?? 'Nama Pengguna';
       _userEmail = prefs.getString('email') ?? 'email@example.com';
       _userPhone = prefs.getString('whatsapp') ?? 'Nomor tidak tersedia';
+      _userId = _userId ;
       _isLoadingUserData = false;
     });
+  } catch (e) {
+    print('Error saat load user data: $e');
   }
+}
+
 
   void _formatCurrency(String value) {
     if (value.isNotEmpty) {
@@ -47,12 +61,12 @@ class _DonasiScreenState extends State<DonasiScreen> {
         symbol: '',
         decimalDigits: 0,
       ).format(parsedValue);
-      
+
       _manualAmountController.value = _manualAmountController.value.copyWith(
         text: formattedValue,
         selection: TextSelection.collapsed(offset: formattedValue.length),
       );
-      
+
       if (_selectedAmount != null && value != _selectedAmount?.replaceAll('Rp ', '')) {
         setState(() {
           _selectedAmount = null;
@@ -62,15 +76,77 @@ class _DonasiScreenState extends State<DonasiScreen> {
   }
 
   void _handleAmountSelection(String amount) {
-    // Extract numeric value from "Rp X.XXX" format
     final numericValue = amount.replaceAll('Rp ', '').replaceAll('.', '');
-    
     setState(() {
       _selectedAmount = amount;
       _manualAmountController.text = numericValue;
-      _formatCurrency(numericValue); // Format the numeric value
+      _formatCurrency(numericValue);
     });
   }
+
+ Future<void> _processDonation() async {
+  if (!mounted) return;
+
+  final amountText = _selectedAmount ??
+      (_manualAmountController.text.isNotEmpty
+          ? 'Rp ${_manualAmountController.text}'
+          : null);
+
+  if (amountText == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Silakan pilih atau masukkan nominal donasi')),
+    );
+    return;
+  }
+
+  final cleanAmount = amountText.replaceAll('Rp ', '').replaceAll('.', '');
+  final nominal = int.tryParse(cleanAmount) ?? 0;
+
+  if (nominal <= 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Nominal donasi tidak valid')),
+    );
+    return;
+  }
+
+  final midtrans = MidtransService(baseUrl: 'http://10.0.2.2:8000/api'); // Ganti sesuai base URL kamu
+
+  final response = await midtrans.createCharge(
+    nominal: nominal,
+    nama: _isAnonymous ? 'Anonymous' : _userFullName,
+    email: _userEmail,
+    telepon: _userPhone,
+    kategoriDonasiId: widget.donasi.id,
+    userId: _userId, // Kirim user_id ke MidtransService
+  );
+
+  if (!response['success']) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Gagal membuat transaksi: ${response['message']}')),
+    );
+    return;
+  }
+
+  final snapToken = response['snap_token'];
+
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => DetailTransaksiScreen(
+      judulDonasi: widget.donasi.judulDonasi,
+      namaDonatur: _isAnonymous ? 'Anonymous' : _userFullName,
+      email: _userEmail,
+      whatsapp: _userPhone,
+      nominal: nominal,
+      kategoriDonasiId: widget.donasi.id,
+      snapToken: response['snap_token'], // Kirim snapToken ke sini
+    ),
+  ),
+);
+
+}
+
+
 
   Widget _buildAmountButton(String amount) {
     final isSelected = _selectedAmount == amount;
@@ -94,6 +170,12 @@ class _DonasiScreenState extends State<DonasiScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _manualAmountController.dispose();
+    super.dispose();
   }
 
   @override
@@ -201,7 +283,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
                   const SizedBox(height: 16),
 
                   // Amount Buttons Grid
-                   GridView.count(
+                  GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 3,
@@ -271,8 +353,8 @@ class _DonasiScreenState extends State<DonasiScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _isAnonymous 
-                        ? 'Donasi anonim (nama tidak ditampilkan)' 
+                    _isAnonymous
+                        ? 'Donasi anonim (nama tidak ditampilkan)'
                         : 'Nama akan ditampilkan di riwayat donasi',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
@@ -321,27 +403,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        final amount = _selectedAmount ?? 
-                            (_manualAmountController.text.isNotEmpty 
-                                ? 'Rp ${_manualAmountController.text}' 
-                                : null);
-                        
-                        if (amount == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Harap pilih atau masukkan nominal donasi'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        // Process donation here
-                        // You can access:
-                        // - amount (String with "Rp" prefix)
-                        // - _isAnonymous (bool)
-                        // - widget.donasi (campaign data)
-                      },
+                      onPressed: _processDonation,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         padding: const EdgeInsets.symmetric(vertical: 16),

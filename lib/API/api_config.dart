@@ -18,6 +18,7 @@ class ApiConfig {
   }
 
   static Uri buildUrl(String endpoint) {
+    endpoint = endpoint.replaceAll(RegExp(r'^/|/$'), '');
     return Uri.parse('$baseUrl/api/$endpoint');
   }
 
