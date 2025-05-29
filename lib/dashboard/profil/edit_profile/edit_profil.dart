@@ -21,7 +21,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _whatsappController = TextEditingController();
 
   File? _selectedImage;
-  String? _imageUrl;
+  String? _imageUrl; // This will hold the URL for the currently displayed image
   bool isLoading = true;
 
   @override
@@ -56,6 +56,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
+        // When a new image is selected, immediately update _imageUrl to reflect the local file
+        _imageUrl = 'file://${pickedFile.path}';
       });
     }
   }
@@ -94,17 +96,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       var response = await request.send();
       final respStr = await response.stream.bytesToString();
 
-      print('Status Code: ${response.statusCode}');
-      print('Response: $respStr');
-
       if (response.statusCode == 200) {
         final respData = jsonDecode(respStr);
         final userData = respData['user'];
 
-        // Ambil foto profil dari response, tambahkan baseUrl jika perlu
+        // Simpan ke SharedPreferences
         String? serverImage = userData['foto_profil'];
         if (serverImage != null && serverImage.isNotEmpty) {
           if (!serverImage.startsWith('http')) {
+            // Prepend base URL if it's a relative path
             serverImage = ApiConfig.imageBaseUrl + serverImage;
           }
         }
@@ -112,12 +112,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await prefs.setString('fullname', _nameController.text);
         await prefs.setString('whatsapp', _whatsappController.text);
         if (serverImage != null) {
+          // Store the full URL or relative path if that's what your app expects
+          // For consistency with ProfileScreen, it's better to store the full URL here
           await prefs.setString('foto_profil', serverImage);
-          _imageUrl = serverImage;
+          setState(() {
+            _imageUrl =
+                serverImage; // Update _imageUrl with the new server image
+            _selectedImage = null; // Clear selected local image
+          });
+        } else if (_selectedImage != null) {
+          // If no server image is returned, but a local image was selected,
+          // store the local image path for immediate display in case of subsequent edits
+          await prefs.setString(
+              'foto_profil', 'file://${_selectedImage!.path}');
+          setState(() {
+            _imageUrl = 'file://${_selectedImage!.path}';
+          });
         }
 
         _showMessage('Perubahan berhasil disimpan');
-        if (mounted) Navigator.pop(context);
+        if (mounted) {
+          // Pass true to signal that data was updated
+          Navigator.pop(context, true);
+        }
       } else {
         _showMessage('Gagal menyimpan perubahan', isError: true);
       }

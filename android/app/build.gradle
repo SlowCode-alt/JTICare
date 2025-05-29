@@ -24,9 +24,9 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.jti.care"
-    compileSdkVersion flutter.compileSdkVersion.toInteger()
-    ndkVersion flutter.ndkVersion
+    namespace = "com.example.project_akhir_donasi_android"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

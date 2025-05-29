@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/edit_profil.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/faq.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/hubungikami.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/pengaturanakun.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/tentangkami.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:project_akhir_donasi_android/login.dart';
-import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/faq.dart';
-import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/pengaturanakun.dart';
-import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/tentangkami.dart';
-import 'package:project_akhir_donasi_android/dashboard/profil/edit_profile/hubungikami.dart';
 import 'package:project_akhir_donasi_android/api/api_config.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -31,24 +31,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final storedFullname = prefs.getString('fullname') ?? 'Nama Pengguna';
+    final storedEmail = prefs.getString('email') ?? 'email@example.com';
     final storedImage = prefs.getString('foto_profil') ?? '';
 
     String finalImageUrl = '';
     if (storedImage.isNotEmpty) {
-      if (storedImage.startsWith('http') || storedImage.startsWith('https')) {
-        finalImageUrl = storedImage;
+      if (storedImage.startsWith('http')) {
+        // If it's already a full URL (from server, possibly with old timestamp),
+        // append a new timestamp to force reload.
+        finalImageUrl =
+            '$storedImage?v=${DateTime.now().millisecondsSinceEpoch}';
       } else if (storedImage.startsWith('file://')) {
+        // If it's a local file path, use it directly.
         finalImageUrl = storedImage;
       } else {
-        finalImageUrl = baseImageUrl + storedImage;
+        // If it's a relative path from the server, construct full URL and append timestamp.
+        finalImageUrl =
+            '$baseImageUrl$storedImage?v=${DateTime.now().millisecondsSinceEpoch}';
       }
     }
 
     if (!mounted) return;
     setState(() {
-      fullname = prefs.getString('fullname') ?? 'Nama Pengguna';
-      email = prefs.getString('email') ?? 'email@example.com';
-      imageUrl = finalImageUrl;
+      fullname = storedFullname;
+      email = storedEmail;
+      imageUrl = finalImageUrl; // Update the imageUrl state variable
       isLoading = false;
     });
   }
@@ -73,11 +81,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: const Text('Apakah Anda yakin ingin logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false), // batal
+            onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Batal'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true), // setuju logout
+            onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Logout'),
           ),
         ],
@@ -91,10 +99,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   ImageProvider _getProfileImage() {
     if (imageUrl.startsWith('file://')) {
+      // For local files, create a FileImage
       return FileImage(File(imageUrl.replaceFirst('file://', '')));
     } else if (imageUrl.isNotEmpty) {
+      // For network images (which should now always have a timestamp for cache busting)
       return NetworkImage(imageUrl);
     } else {
+      // Fallback to dummy image
       return const AssetImage('assets/profile_dummy.webp');
     }
   }
@@ -117,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: const Color.fromRGBO(74, 171, 251, 1),
+              color: const Color.fromARGB(255, 74, 171, 251),
               borderRadius: BorderRadius.circular(15),
             ),
             padding: const EdgeInsets.all(16),
@@ -142,6 +153,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.white),
+                  onPressed: () async {
+                    // Tunggu hasil dari halaman edit profil
+                    final result = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const EditProfileScreen()),
+                    );
+
+                    // Jika ada perubahan (result is true), reload data profil
+                    if (result == true && mounted) {
+                      setState(() =>
+                          isLoading = true); // Show loading while reloading
+                      await _loadUserData();
+                    }
+                  },
+                )
               ],
             ),
           ),
@@ -149,75 +178,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Card(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 2,
             child: Column(
               children: [
-                _buildMenuItem(Icons.person, "Edit Profil", () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const EditProfileScreen()),
-                  );
-                  _loadUserData();
-                }),
-                const Divider(),
-                _buildMenuItem(Icons.settings, "Pengaturan Akun", () {
-                  Navigator.push(
+                ListTile(
+                  leading: const Icon(Icons.settings),
+                  title: const Text("Pengaturan Akun"),
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => const PengaturanAkunPage()),
-                  );
-                }),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text("Lainnya", style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Card(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 2,
-            child: Column(
-              children: [
-                _buildMenuItem(Icons.help_outline, "FAQ", () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const FAQPage()));
-                }),
-                const Divider(),
-                _buildMenuItem(Icons.info_outline, "Tentang Kami", () {
-                  Navigator.push(
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.help_outline),
+                  title: const Text("FAQ"),
+                  onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const TentangKamiPage()),
-                  );
-                }),
-                const Divider(),
-                _buildMenuItem(Icons.phone, "Hubungi Kami", () {
-                  Navigator.push(
+                    MaterialPageRoute(builder: (context) => const FAQPage()),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.phone),
+                  title: const Text("Hubungi Kami"),
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => const HubungiKamiPage()),
-                  );
-                }),
-                const Divider(),
-                _buildMenuItem(Icons.logout, "Logout", () {
-                  confirmLogout(context); // tombol logout pakai konfirmasi
-                }),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text("Tentang Kami"),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const TentangKamiPage()),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text("Logout"),
+                  onTap: () => confirmLogout(context),
+                ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.blue),
-      title: Text(title),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
     );
   }
 }
