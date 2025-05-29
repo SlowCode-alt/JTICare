@@ -100,7 +100,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
@@ -195,7 +196,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       itemCount: donasiList.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
@@ -203,10 +205,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       itemBuilder: (context, index) {
                         final donasi = donasiList[index];
-                        
+
                         int persen = 0;
                         if (donasi.targetDana != 0) {
-                          double tempPersen = (donasi.donasiTerkumpul / donasi.targetDana) * 100;
+                          double tempPersen =
+                              (donasi.donasiTerkumpul / donasi.targetDana) *
+                                  100;
                           persen = tempPersen.toInt();
                           if (persen > 100) persen = 100;
                           if (persen < 0) persen = 0;
@@ -217,7 +221,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => DonasiDetailPage(donasi: donasi),
+                                builder: (context) =>
+                                    DonasiDetailPage(donasi: donasi),
                               ),
                             );
                           },
@@ -227,7 +232,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             tanggal: donasi.tanggalBuat,
                             judul: donasi.judulDonasi,
                             deskripsi: donasi.deskripsi,
-                            terkumpul: donasi.donasiTerkumpul.toStringAsFixed(0),
+                            terkumpul:
+                                donasi.donasiTerkumpul.toStringAsFixed(0),
                             target: donasi.targetDana.toStringAsFixed(0),
                             persen: persen,
                           ),
@@ -264,7 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           BottomNavigationBarItem(
             icon: Image.asset(
-              _selectedIndex == 1 ? 'assets/bell_warna.png' : 'assets/bell.png',
+              _selectedIndex == 1 ? 'assets/give_warna.png' : 'assets/give.png',
               width: 30,
               height: 30,
             ),
@@ -272,7 +278,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           BottomNavigationBarItem(
             icon: Image.asset(
-              _selectedIndex == 2 ? 'assets/give_warna.png' : 'assets/give.png',
+              _selectedIndex == 2 ? 'assets/bell_warna.png' : 'assets/bell.png',
               width: 30,
               height: 30,
             ),
@@ -351,7 +357,8 @@ class DonasiCard extends StatelessWidget {
                     children: [
                       Icon(Icons.error_outline, color: Colors.red),
                       SizedBox(height: 4),
-                      Text('Gagal memuat gambar', style: TextStyle(fontSize: 10)),
+                      Text('Gagal memuat gambar',
+                          style: TextStyle(fontSize: 10)),
                     ],
                   ),
                 ),

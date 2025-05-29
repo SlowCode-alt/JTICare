@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project_akhir_donasi_android/dashboard/profil/detail_transaksi.dart';
 import '../models/donasi_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,13 +48,14 @@ class _DonasiScreenState extends State<DonasiScreen> {
         symbol: '',
         decimalDigits: 0,
       ).format(parsedValue);
-      
+
       _manualAmountController.value = _manualAmountController.value.copyWith(
         text: formattedValue,
         selection: TextSelection.collapsed(offset: formattedValue.length),
       );
-      
-      if (_selectedAmount != null && value != _selectedAmount?.replaceAll('Rp ', '')) {
+
+      if (_selectedAmount != null &&
+          value != _selectedAmount?.replaceAll('Rp ', '')) {
         setState(() {
           _selectedAmount = null;
         });
@@ -62,14 +64,55 @@ class _DonasiScreenState extends State<DonasiScreen> {
   }
 
   void _handleAmountSelection(String amount) {
-    // Extract numeric value from "Rp X.XXX" format
     final numericValue = amount.replaceAll('Rp ', '').replaceAll('.', '');
-    
     setState(() {
       _selectedAmount = amount;
       _manualAmountController.text = numericValue;
-      _formatCurrency(numericValue); // Format the numeric value
+      _formatCurrency(numericValue);
     });
+  }
+
+  Future<void> _processDonation() async {
+    if (!mounted) return;
+
+    // Validasi amount
+    final amount = _selectedAmount ??
+        (_manualAmountController.text.isNotEmpty
+            ? 'Rp ${_manualAmountController.text}'
+            : null);
+
+    if (amount == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Silakan pilih atau masukkan nominal donasi')),
+      );
+      return;
+    }
+
+    final cleanAmount = amount.replaceAll('Rp ', '').replaceAll('.', '');
+    final nominal = int.tryParse(cleanAmount) ?? 0;
+
+    if (nominal <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nominal donasi tidak valid')),
+      );
+      return;
+    }
+
+    // Navigate to detail transaction screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailTransaksiScreen(
+          judulDonasi: widget.donasi.judulDonasi,
+          namaDonatur: _isAnonymous ? 'Anonymous' : _userFullName,
+          email: _userEmail,
+          whatsapp: _userPhone,
+          nominal: nominal,
+          kategoriDonasiId: widget.donasi.id,
+        ),
+      ),
+    );
   }
 
   Widget _buildAmountButton(String amount) {
@@ -94,6 +137,12 @@ class _DonasiScreenState extends State<DonasiScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _manualAmountController.dispose();
+    super.dispose();
   }
 
   @override
@@ -201,7 +250,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
                   const SizedBox(height: 16),
 
                   // Amount Buttons Grid
-                   GridView.count(
+                  GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 3,
@@ -209,10 +258,18 @@ class _DonasiScreenState extends State<DonasiScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 2.5,
                     children: [
-                      '1.000', '2.000', '5.000',
-                      '10.000', '20.000', '50.000',
-                      '100.000', '200.000', '500.000'
-                    ].map((amount) => _buildAmountButton('Rp $amount')).toList(),
+                      '1.000',
+                      '2.000',
+                      '5.000',
+                      '10.000',
+                      '20.000',
+                      '50.000',
+                      '100.000',
+                      '200.000',
+                      '500.000'
+                    ]
+                        .map((amount) => _buildAmountButton('Rp $amount'))
+                        .toList(),
                   ),
                   const SizedBox(height: 16),
 
@@ -271,8 +328,8 @@ class _DonasiScreenState extends State<DonasiScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _isAnonymous 
-                        ? 'Donasi anonim (nama tidak ditampilkan)' 
+                    _isAnonymous
+                        ? 'Donasi anonim (nama tidak ditampilkan)'
                         : 'Nama akan ditampilkan di riwayat donasi',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
@@ -321,27 +378,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        final amount = _selectedAmount ?? 
-                            (_manualAmountController.text.isNotEmpty 
-                                ? 'Rp ${_manualAmountController.text}' 
-                                : null);
-                        
-                        if (amount == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Harap pilih atau masukkan nominal donasi'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        // Process donation here
-                        // You can access:
-                        // - amount (String with "Rp" prefix)
-                        // - _isAnonymous (bool)
-                        // - widget.donasi (campaign data)
-                      },
+                      onPressed: _processDonation,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         padding: const EdgeInsets.symmetric(vertical: 16),

@@ -9,6 +9,7 @@ android {
     namespace = "com.example.project_akhir_donasi_android"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    // namespace 'dev.tomykho.midtrans_sdk'
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
