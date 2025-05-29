@@ -27,7 +27,6 @@ dependencies:
   flutter_dotenv: ^5.1.0
   webview_flutter: ^4.0.7
   cached_network_image: ^3.3.0
-  
 
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -38,6 +37,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/logojticare.png
     - assets/jticarebiru.png
     - assets/home.png
@@ -58,7 +58,7 @@ flutter:
     - assets/splash1.png
     - assets/splash2.png
     - assets/splash3.png
-
+    - assets/gif/splashgif.gif
   fonts:
     - family: Poppins
       fonts:

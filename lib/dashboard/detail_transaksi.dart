@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,7 +15,6 @@ class DetailTransaksiScreen extends StatefulWidget {
   final int nominal;
   final int kategoriDonasiId;
   final String snapToken;
-
 
   const DetailTransaksiScreen({
     super.key,
@@ -44,16 +42,15 @@ class _DetailTransaksiScreenState extends State<DetailTransaksiScreen> {
     super.initState();
     _midtransService = MidtransService(
       baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8000/api',
-      
     );
     _initMidtransSDK();
   }
 
   Future<void> _initMidtransSDK() async {
     try {
-      final clientKey = dotenv.env['MIDTRANS_CLIENT_KEY'] ?? 
-                      'SB-Mid-client-MLuYAEYGBy0qPr8V';
-      
+      final clientKey =
+          dotenv.env['MIDTRANS_CLIENT_KEY'] ?? 'SB-Mid-client-MLuYAEYGBy0qPr8V';
+
       _midtrans = await MidtransSDK.init(
         config: MidtransConfig(
           clientKey: clientKey,
@@ -65,20 +62,21 @@ class _DetailTransaksiScreenState extends State<DetailTransaksiScreen> {
           ),
         ),
       );
-      
+
       await _midtrans.setUIKitCustomSetting(
         skipCustomerDetailsPages: true,
-        
       );
-      
+
       _midtrans.setTransactionFinishedCallback(_handlePaymentResult);
-      
+
       setState(() => _isMidtransReady = true);
     } catch (e, stack) {
       print('Midtrans init error: $e\n$stack');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menginisialisasi pembayaran: ${e.toString()}')),
+          SnackBar(
+              content:
+                  Text('Gagal menginisialisasi pembayaran: ${e.toString()}')),
         );
       }
     }
@@ -95,32 +93,31 @@ class _DetailTransaksiScreenState extends State<DetailTransaksiScreen> {
   }
 
   Future<void> _processPayment() async {
-  if (!_isMidtransReady) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sistem pembayaran belum siap')),
-    );
-    return;
-  }
+    if (!_isMidtransReady) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sistem pembayaran belum siap')),
+      );
+      return;
+    }
 
-  setState(() => _isProcessingPayment = true);
+    setState(() => _isProcessingPayment = true);
 
-  try {
-    await _midtrans.startPaymentUiFlow(
-      token: widget.snapToken,
-    );
-  } catch (error) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error pembayaran: $error')),
-    );
-  } finally {
-    if (mounted) {
-      setState(() => _isProcessingPayment = false);
+    try {
+      await _midtrans.startPaymentUiFlow(
+        token: widget.snapToken,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error pembayaran: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessingPayment = false);
+      }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +174,8 @@ class _DetailTransaksiScreenState extends State<DetailTransaksiScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _isProcessingPayment ? null : _processPayment,
+                        onPressed:
+                            _isProcessingPayment ? null : _processPayment,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -186,7 +184,8 @@ class _DetailTransaksiScreenState extends State<DetailTransaksiScreen> {
                           ),
                         ),
                         child: _isProcessingPayment
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
                             : const Text(
                                 'Bayar Sekarang',
                                 style: TextStyle(
