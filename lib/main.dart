@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final token = await TokenManager.getToken();
     // Beri delay tambahan jika ingin splash screen awal (logo) tampil lebih lama
     await Future.delayed(
-        const Duration(seconds: 2)); // Delay tambahan untuk logo splash
+        const Duration(seconds: 3)); // Delay tambahan untuk logo splash
 
     if (!mounted) return;
 

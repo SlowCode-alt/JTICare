@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -6,11 +8,13 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
-        android:label="project_akhir_donasi_android"
+        android:label="JTICare"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-       
-       >
+        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true"
+        tools:replace="android:label,android:usesCleartextTraffic">
+
         <activity
             android:name="com.example.project_akhir_donasi_android.MainActivity"
             android:exported="true"
@@ -31,24 +35,22 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
         <activity
-    android:name="com.midtrans.sdk.uikit.activities.UserDetailsActivity"
-    android:theme="@style/AppTheme" />
-    
-<activity
-    android:name="com.midtrans.sdk.uikit.activities.PaymentMethodsActivity"
-    android:theme="@style/AppTheme" />
-    
-<activity
-    android:name="com.midtrans.sdk.uikit.activities.BankTransferActivity"
-    android:theme="@style/AppTheme" />
-        <!-- Flutter embedding -->
+            android:name="com.midtrans.sdk.uikit.activities.UserDetailsActivity"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name="com.midtrans.sdk.uikit.activities.PaymentMethodsActivity"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name="com.midtrans.sdk.uikit.activities.BankTransferActivity"
+            android:theme="@style/AppTheme" />
+            
         <meta-data
             android:name="flutterEmbedding"
             android:value="2"/>
     </application>
 
-    <!-- For text processing support -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
