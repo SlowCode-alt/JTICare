@@ -1,11 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.project_akhir_donasi_android">
 
-    <!-- Internet permission for debugging -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    
+
     <application
-        tools:replace="android:usesCleartextTraffic"
-        android:usesCleartextTraffic="true">
+        android:label="JTICare"
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
+        tools:replace="android:label,android:usesCleartextTraffic">
+        <!-- Debug-specific config (optional) -->
     </application>
+
 </manifest>

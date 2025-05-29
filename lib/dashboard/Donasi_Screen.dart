@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'package:project_akhir_donasi_android/API/midtrans_service.dart';
 import '../models/donasi_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,7 +67,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
         text: formattedValue,
         selection: TextSelection.collapsed(offset: formattedValue.length),
       );
-      
+
       if (_selectedAmount != null && value != _selectedAmount?.replaceAll('Rp ', '')) {
         setState(() {
           _selectedAmount = null;
@@ -79,9 +81,73 @@ class _DonasiScreenState extends State<DonasiScreen> {
     setState(() {
       _selectedAmount = amount;
       _manualAmountController.text = numericValue;
-      _formatCurrency(numericValue); // Format the numeric value
+      _formatCurrency(numericValue);
     });
   }
+
+ Future<void> _processDonation() async {
+  if (!mounted) return;
+
+  final amountText = _selectedAmount ??
+      (_manualAmountController.text.isNotEmpty
+          ? 'Rp ${_manualAmountController.text}'
+          : null);
+
+  if (amountText == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Silakan pilih atau masukkan nominal donasi')),
+    );
+    return;
+  }
+
+  final cleanAmount = amountText.replaceAll('Rp ', '').replaceAll('.', '');
+  final nominal = int.tryParse(cleanAmount) ?? 0;
+
+  if (nominal <= 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Nominal donasi tidak valid')),
+    );
+    return;
+  }
+
+  final midtrans = MidtransService(baseUrl: 'http://10.0.2.2:8000/api'); // Ganti sesuai base URL kamu
+
+  final response = await midtrans.createCharge(
+    nominal: nominal,
+    nama: _isAnonymous ? 'Anonymous' : _userFullName,
+    email: _userEmail,
+    telepon: _userPhone,
+    kategoriDonasiId: widget.donasi.id,
+    userId: _userId, // Kirim user_id ke MidtransService
+  );
+
+  if (!response['success']) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Gagal membuat transaksi: ${response['message']}')),
+    );
+    return;
+  }
+
+  final snapToken = response['snap_token'];
+
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => DetailTransaksiScreen(
+      judulDonasi: widget.donasi.judulDonasi,
+      namaDonatur: _isAnonymous ? 'Anonymous' : _userFullName,
+      email: _userEmail,
+      whatsapp: _userPhone,
+      nominal: nominal,
+      kategoriDonasiId: widget.donasi.id,
+      snapToken: response['snap_token'], // Kirim snapToken ke sini
+    ),
+  ),
+);
+
+}
+
+
 
   Widget _buildAmountButton(String amount) {
     final isSelected = _selectedAmount == amount;
@@ -226,18 +292,10 @@ class _DonasiScreenState extends State<DonasiScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 2.5,
                     children: [
-                      '1.000',
-                      '2.000',
-                      '5.000',
-                      '10.000',
-                      '20.000',
-                      '50.000',
-                      '100.000',
-                      '200.000',
-                      '500.000'
-                    ]
-                        .map((amount) => _buildAmountButton('Rp $amount'))
-                        .toList(),
+                      '1.000', '2.000', '5.000',
+                      '10.000', '20.000', '50.000',
+                      '100.000', '200.000', '500.000'
+                    ].map((amount) => _buildAmountButton('Rp $amount')).toList(),
                   ),
                   const SizedBox(height: 16),
 

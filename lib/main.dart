@@ -4,7 +4,10 @@ import 'package:project_akhir_donasi_android/dashboard/dashboard.dart';
 import 'package:project_akhir_donasi_android/utils/TokenManager.dart'; // Import TokenManager
 
 void main() {
-  runApp(const MyApp());
+  void main() {
+  runApp(const MyApp(showIntro: true)); // atau false, tergantung kebutuhan
+}
+
 }
 
 class MyApp extends StatelessWidget {

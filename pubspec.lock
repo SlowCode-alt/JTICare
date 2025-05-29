@@ -153,6 +153,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
+  dart_style:
+    dependency: transitive
+    description:
+      name: dart_style
+      sha256: "5b236382b47ee411741447c1f1e111459c941ea1b3f2b540dde54c210a3662af"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
   fake_async:
     dependency: transitive
     description:
@@ -464,6 +472,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.16.0"
+  midtrans:
+    dependency: "direct main"
+    description:
+      name: midtrans
+      sha256: "46a9f945503c7a4a51dac2c6cfebb9d4ae6367cd55b7bf2a54902cff0e1b48b3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
+  midtrans_sdk:
+    dependency: "direct main"
+    description:
+      name: midtrans_sdk
+      sha256: "2e0ce5aa20f4bce2bb8eb506ad93417d1a429e220cb4d5351ee8b1f1fd9c9100"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0"
   mime:
     dependency: transitive
     description:
@@ -900,7 +924,15 @@ packages:
       sha256: ddfa8d30d89985b96407efce8acbdd124701f96741f2d981ca860662f1c0dc02
       url: "https://pub.dev"
     source: hosted
-    version: "14.3.1"
+    version: "15.0.0"
+  watcher:
+    dependency: transitive
+    description:
+      name: watcher
+      sha256: "69da27e49efa56a15f8afe8f4438c4ec02eff0a117df1b22ea4aad194fe1c104"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   web:
     dependency: transitive
     description:
