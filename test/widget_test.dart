@@ -12,10 +12,10 @@ void main() {
   // Mock dotenv untuk menghindari NotInitializedError saat test
   setUpAll(() async {
     // Memastikan binding siap untuk inisialisasi dotenv di test
-    TestWidgetsFlutterBinding.ensureInitialized();
     // Memuat mock values untuk dotenv
     await dotenv.load(fileName: ".env");
     // Anda bisa mock env variables yang dibutuhkan oleh DetailTransaksiScreen
+    TestWidgetsFlutterBinding.ensureInitialized();
     // Jika tidak ada file .env di test environment, ini akan memuat secara default kosong.
     // Jika ada nilai spesifik yang dibutuhkan untuk test, bisa di-mock di sini
     // dotenv.testLoad(fileInto: {'API_BASE_URL': 'http://test.api'});

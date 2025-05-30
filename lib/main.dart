@@ -1,5 +1,5 @@
 // lib/main.dart
-import 'package:flutter/services.dart';  // Add this import
+import 'package:flutter/services.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/login.dart';
 import 'package:project_akhir_donasi_android/dashboard/dashboard.dart';
@@ -9,11 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart'; // <<<--- Import in
 import 'package:project_akhir_donasi_android/widget/intro_splashscreen.dart'; // <<<--- Import IntroSplashScreen Anda
 
 void main() async {
-   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-
   runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  await dotenv.load(fileName: ".env");
 }
 
 class MyApp extends StatelessWidget {
@@ -74,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final token = await TokenManager.getToken();
     // Beri delay tambahan jika ingin splash screen awal (logo) tampil lebih lama
     await Future.delayed(
-         const Duration(seconds: 3)); // Delay tambahan untuk logo splash
+        const Duration(seconds: 3)); // Delay tambahan untuk logo splash
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
