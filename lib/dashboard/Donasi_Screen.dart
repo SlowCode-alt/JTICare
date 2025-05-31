@@ -132,7 +132,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
   print('- Kategori Donasi ID: ${widget.donasi.id}');
 
   // 2. Panggil MidtransService
-  final midtrans = MidtransService(baseUrl: 'http://10.0.2.2:8000/api');
+  final midtrans = MidtransService(baseUrl: 'https://jticare.my.id/api');
   print('\nMengirim request ke backend...');
 
   try {

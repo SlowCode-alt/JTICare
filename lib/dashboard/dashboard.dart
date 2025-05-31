@@ -9,11 +9,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'donasi_detail.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final bool refresh;
+
+  const DashboardScreen({super.key, this.refresh = false});
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
+
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
@@ -22,10 +25,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String errorMessage = '';
 
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
+  if (widget.refresh) {
+    _fetchKategoriDonasi();
+  } else {
     _fetchKategoriDonasi();
   }
+}
 
   Future<void> _fetchKategoriDonasi() async {
     setState(() {

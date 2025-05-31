@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import './payment_success_screen.dart';
 
 class DetailTransaksiScreen extends StatefulWidget {
   final String judulDonasi;
@@ -61,13 +62,34 @@ class _DetailTransaksiScreenState extends State<DetailTransaksiScreen> {
   }
 
   void _checkPaymentStatus(String url) {
-    print('Current URL: $url');
-    if (url.contains('/success') || 
-        url.contains('status_code=200') || 
-        url.contains('transaction_status=settlement')) {
-      setState(() => _paymentSuccess = true);
-    }
+  print('Current URL: $url');
+  if (url.contains('/success') || 
+      url.contains('status_code=200') || 
+      url.contains('transaction_status=settlement')) {
+    setState(() => _paymentSuccess = true);
+
+    // Redirect ke halaman sukses
+    Future.delayed(Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(milliseconds: 500), () async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const PaymentSuccessScreen(),
+    ),
+  );
+
+  if (result == true && mounted) {
+    setState(() {
+      // Di sini kamu bisa trigger refresh atau update tampilan.
+      // Contoh: panggil callback ke Dashboard atau reload data.
+    });
   }
+});
+
+    });
+  }
+}
+
 
   void _loadPaymentPage() {
     setState(() {
