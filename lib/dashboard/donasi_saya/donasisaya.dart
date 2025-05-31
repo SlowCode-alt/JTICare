@@ -26,7 +26,7 @@ class DonasiSayaHeader extends StatelessWidget {
     return Container(
       height: 190, // Sama seperti dashboard
       decoration: const BoxDecoration(
-        color: Color(0xFF4EB7F2), // Biru muda
+        color: Colors.lightBlue, // Biru muda
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -118,7 +118,7 @@ class DonasiSayaList extends StatelessWidget {
           elevation: 2,
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
-            leading: const Icon(Icons.favorite, color: Colors.blue),
+            leading: const Icon(Icons.favorite, color: Colors.lightBlue),
             title: Text(item['judul'] ?? ''),
             subtitle: Text(item['tanggal'] ?? ''),
             trailing: Column(
