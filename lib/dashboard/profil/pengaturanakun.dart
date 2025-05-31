@@ -47,31 +47,58 @@ class _PengaturanAkunPageState extends State<PengaturanAkunPage> {
       return;
     }
 
+    if (newPassword.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Password baru minimal 8 karakter.")),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
       final response = await http.post(
         ApiConfig.ubahPasswordPengaturanAkunUrl,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({
-          'email': _email,
-          'current_password': currentPassword,
-          'new_password': newPassword,
-          'new_password_confirmation': newPassword,
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
         }),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response headers: ${response.headers}');
+      print('Response body: ${response.body}');
+
+      if (response.body.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Response kosong dari server')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
       final data = jsonDecode(response.body);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? 'Respon tidak diketahui')),
-      );
-
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(data['message'] ?? 'Password berhasil diubah')),
+        );
         _newPasswordController.clear();
         _currentPasswordController.clear();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Gagal mengubah password')),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

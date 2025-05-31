@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:project_akhir_donasi_android/API/api_config.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:project_akhir_donasi_android/API/api_config.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -21,7 +20,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _whatsappController = TextEditingController();
 
   File? _selectedImage;
-  String? _imageUrl; // This will hold the URL for the currently displayed image
+  String? _imageUrl;
   bool isLoading = true;
 
   @override
@@ -35,16 +34,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.text = prefs.getString('fullname') ?? '';
     _emailController.text = prefs.getString('email') ?? '';
     _whatsappController.text = prefs.getString('whatsapp') ?? '';
-
     String? storedImage = prefs.getString('foto_profil');
+
     if (storedImage != null && storedImage.isNotEmpty) {
-      if (!storedImage.startsWith('http')) {
+      if (!storedImage.startsWith('http') &&
+          !storedImage.startsWith('file://')) {
         _imageUrl = ApiConfig.imageBaseUrl + storedImage;
       } else {
         _imageUrl = storedImage;
       }
-    } else {
-      _imageUrl = null;
     }
 
     setState(() => isLoading = false);
@@ -56,7 +54,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
-        // When a new image is selected, immediately update _imageUrl to reflect the local file
         _imageUrl = 'file://${pickedFile.path}';
       });
     }
@@ -70,18 +67,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
-
     if (token.isEmpty) {
       _showMessage('Token tidak ditemukan, silakan login ulang', isError: true);
       return;
     }
 
     try {
-      var uri = ApiConfig.updateProfileUrl;
-      var request = http.MultipartRequest('POST', uri);
+      var request = http.MultipartRequest('POST', ApiConfig.updateProfileUrl);
       request.headers['Authorization'] = 'Bearer $token';
 
       request.fields['nama_lengkap'] = _nameController.text;
+      request.fields['email'] = _emailController.text;
       request.fields['no_whatsapp'] = _whatsappController.text;
 
       if (_selectedImage != null) {
@@ -98,49 +94,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (response.statusCode == 200) {
         final respData = jsonDecode(respStr);
-        final userData = respData['user'];
+        final userData = respData['data'];
 
-        // Simpan ke SharedPreferences
+        await prefs.setString('fullname', userData['nama_lengkap'] ?? '');
+        await prefs.setString('email', userData['email'] ?? '');
+        await prefs.setString('whatsapp', userData['no_whatsapp'] ?? '');
+
         String? serverImage = userData['foto_profil'];
         if (serverImage != null && serverImage.isNotEmpty) {
-          if (!serverImage.startsWith('http')) {
-            // Prepend base URL if it's a relative path
-            serverImage = ApiConfig.imageBaseUrl + serverImage;
-          }
-        }
+          String fullUrl = serverImage.startsWith('http')
+              ? serverImage
+              : ApiConfig.imageBaseUrl + serverImage;
 
-        await prefs.setString('fullname', _nameController.text);
-        await prefs.setString('whatsapp', _whatsappController.text);
-        if (serverImage != null) {
-          // Store the full URL or relative path if that's what your app expects
-          // For consistency with ProfileScreen, it's better to store the full URL here
-          await prefs.setString('foto_profil', serverImage);
+          // Tambah timestamp biar cache browser/Flutter tidak stuck
+          fullUrl += '?v=${DateTime.now().millisecondsSinceEpoch}';
+
+          await prefs.setString('foto_profil', fullUrl);
           setState(() {
-            _imageUrl =
-                serverImage; // Update _imageUrl with the new server image
-            _selectedImage = null; // Clear selected local image
-          });
-        } else if (_selectedImage != null) {
-          // If no server image is returned, but a local image was selected,
-          // store the local image path for immediate display in case of subsequent edits
-          await prefs.setString(
-              'foto_profil', 'file://${_selectedImage!.path}');
-          setState(() {
-            _imageUrl = 'file://${_selectedImage!.path}';
+            _imageUrl = fullUrl;
+            _selectedImage = null;
           });
         }
 
         _showMessage('Perubahan berhasil disimpan');
-        if (mounted) {
-          // Pass true to signal that data was updated
-          Navigator.pop(context, true);
-        }
+        if (mounted) Navigator.pop(context, true);
       } else {
         _showMessage('Gagal menyimpan perubahan', isError: true);
       }
     } catch (e) {
-      print('Error saat mengirim request: $e');
-      _showMessage('Terjadi kesalahan, coba lagi nanti', isError: true);
+      _showMessage('Terjadi kesalahan: $e', isError: true);
     }
   }
 
@@ -157,53 +139,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final profileImage = _selectedImage != null
         ? FileImage(_selectedImage!)
-        : (_imageUrl != null && _imageUrl!.isNotEmpty
-            ? NetworkImage(_imageUrl!)
-            : const AssetImage('assets/profile_dummy.webp')) as ImageProvider;
+        : (_imageUrl != null
+            ? (_imageUrl!.startsWith('file://')
+                ? FileImage(File(_imageUrl!.replaceFirst('file://', '')))
+                : NetworkImage(_imageUrl!)) as ImageProvider
+            : const AssetImage('assets/profile_dummy.webp'));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profil'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: AppBar(title: const Text('Edit Profil')),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  const SizedBox(height: 10),
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundImage: profileImage,
-                      ),
+                      CircleAvatar(radius: 50, backgroundImage: profileImage),
                       GestureDetector(
                         onTap: _pickImage,
                         child: Container(
-                          padding: const EdgeInsets.all(4),
+                          padding: const EdgeInsets.all(6),
                           decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.blue,
-                          ),
-                          child: const Icon(Icons.camera_alt,
-                              color: Colors.white, size: 20),
+                              shape: BoxShape.circle, color: Colors.blue),
+                          child:
+                              const Icon(Icons.camera_alt, color: Colors.white),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(_nameController.text,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18)),
-                  Text(_emailController.text,
-                      style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildInputField('Nama Lengkap', _nameController),
                   const SizedBox(height: 16),
                   _buildInputField('Email', _emailController, readOnly: true),
@@ -215,10 +181,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     onPressed: _saveChanges,
                     icon: const Icon(Icons.save),
                     label: const Text('Simpan Perubahan'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
                   )
                 ],
               ),
@@ -239,11 +201,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          keyboardType: keyboardType,
           readOnly: readOnly,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             filled: readOnly,
             fillColor: readOnly ? Colors.grey.shade200 : null,
           ),

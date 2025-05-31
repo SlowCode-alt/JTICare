@@ -99,24 +99,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.search, color: Colors.grey),
-                      SizedBox(width: 8),
-                      Text("Cari", style: TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                ),
+                Container(),
                 const SizedBox(height: 16),
                 const Text(
-                  "Hai, Saiful!",
+                  "Selamat Datang",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,

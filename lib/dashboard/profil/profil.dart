@@ -38,15 +38,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String finalImageUrl = '';
     if (storedImage.isNotEmpty) {
       if (storedImage.startsWith('http')) {
-        // If it's already a full URL (from server, possibly with old timestamp),
-        // append a new timestamp to force reload.
+        // Pastikan tidak ada query sebelumnya
+        final uri = Uri.parse(storedImage);
+        final cleanedUrl = uri.replace(queryParameters: {}).toString();
         finalImageUrl =
-            '$storedImage?v=${DateTime.now().millisecondsSinceEpoch}';
+            '$cleanedUrl?v=${DateTime.now().millisecondsSinceEpoch}';
       } else if (storedImage.startsWith('file://')) {
-        // If it's a local file path, use it directly.
         finalImageUrl = storedImage;
       } else {
-        // If it's a relative path from the server, construct full URL and append timestamp.
         finalImageUrl =
             '$baseImageUrl$storedImage?v=${DateTime.now().millisecondsSinceEpoch}';
       }
@@ -99,13 +98,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   ImageProvider _getProfileImage() {
     if (imageUrl.startsWith('file://')) {
-      // For local files, create a FileImage
       return FileImage(File(imageUrl.replaceFirst('file://', '')));
     } else if (imageUrl.isNotEmpty) {
-      // For network images (which should now always have a timestamp for cache busting)
       return NetworkImage(imageUrl);
     } else {
-      // Fallback to dummy image
       return const AssetImage('assets/profile_dummy.webp');
     }
   }

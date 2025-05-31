@@ -36,23 +36,25 @@ class Donasi {
     try {
       final baseUrl = ApiConfig.baseUrl;
       final imagePath = json['gambar']?.toString() ?? '';
-      final fullImageUrl = imagePath.isNotEmpty 
-          ? '$baseUrl/storage/$imagePath' 
-          : '';
+      final fullImageUrl =
+          imagePath.isNotEmpty ? '$baseUrl/storage/$imagePath' : '';
 
       developer.log('Generated image URL: $fullImageUrl', name: 'API');
 
       return Donasi(
-        id: json['id'] as int? ?? 0,
-        idUser: json['id_user'] as int? ?? 0,
+        id: int.tryParse(json['id'].toString()) ?? 0,
+        idUser: int.tryParse(json['id_user'].toString()) ?? 0,
         judulDonasi: json['judul_donasi']?.toString() ?? 'No Title',
         gambar: fullImageUrl,
         deskripsi: json['deskripsi']?.toString() ?? 'No Description',
-        targetDana: double.tryParse(json['target_dana']?.toString() ?? '0') ?? 0,
-        jumlahDonatur: json['jumlah_donatur'] as int? ?? 0,
-        donasiTerkumpul: double.tryParse(json['donasi_terkumpul']?.toString() ?? '0') ?? 0,
+        targetDana:
+            double.tryParse(json['target_dana']?.toString() ?? '0') ?? 0,
+        jumlahDonatur: int.tryParse(json['jumlah_donatur'].toString()) ?? 0,
+        donasiTerkumpul:
+            double.tryParse(json['donasi_terkumpul']?.toString() ?? '0') ?? 0,
         deadline: json['deadline']?.toString() ?? json['dedline']?.toString(),
-        tanggalBuat: json['tanggal_buat']?.toString() ?? DateTime.now().toString(),
+        tanggalBuat:
+            json['tanggal_buat']?.toString() ?? DateTime.now().toString(),
         status: json['status']?.toString() ?? 'unknown',
         createdAt: json['created_at']?.toString(),
         updatedAt: json['updated_at']?.toString(),

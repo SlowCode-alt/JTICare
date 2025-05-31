@@ -6,7 +6,7 @@ class ApiConfig {
     if (kIsWeb) {
       return "http://localhost:8000"; // Untuk Flutter Web
     } else if (Platform.isAndroid) {
-      return "http://10.0.2.2:8000"; // Untuk Android emulator
+      return "https://jticare.my.id"; // Untuk Android emulator
     } else {
       return "http://localhost:8000"; // Untuk iOS simulator / desktop
     }
@@ -14,7 +14,7 @@ class ApiConfig {
 
   // Menambahkan URL untuk gambar
   static String get imageBaseUrl {
-    return '$baseUrl/storage/profile_photos/'; // Menambahkan path gambar
+    return '$baseUrl/storage/'; // Menambahkan path gambar
   }
 
   static Uri buildUrl(String endpoint) {
@@ -31,11 +31,11 @@ class ApiConfig {
   }
 
   static Uri get ubahPasswordPengaturanAkunUrl {
-    return buildUrl('ubahPasswordProfile');
+    return buildUrl('update-password');
   }
 
   static Uri get deleteAccountPengaturanAkunUrl {
-    return buildUrl('deleteAccountProfile');
+    return buildUrl('hapus-akun');
   }
 
   static Uri get sendEmailUrl {
