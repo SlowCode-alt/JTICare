@@ -5,6 +5,7 @@ import 'Donasi_Screen.dart';
 
 class DonasiDetailPage extends StatelessWidget {
   final Donasi donasi;
+  
 
   const DonasiDetailPage({super.key, required this.donasi});
 

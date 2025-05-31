@@ -8,6 +8,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // <<<--- Import ini
 import 'package:project_akhir_donasi_android/widget/intro_splashscreen.dart'; // <<<--- Import IntroSplashScreen Anda
 
+
+
 void main() async {
   runApp(const MyApp());
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,14 +21,16 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+      Widget build(BuildContext context) {
+      return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Poppins',
       ),
-      home: const SplashScreen(), // Tetap mulai dari SplashScreen
+      home: const SplashScreen(),
+      
     );
+
   }
 }
 
