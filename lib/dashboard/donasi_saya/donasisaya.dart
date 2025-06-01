@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/API/donatur_service.dart';
+import 'package:project_akhir_donasi_android/API/donasi_service.dart'; // Import DonasiService
 import 'package:project_akhir_donasi_android/models/donasisaya_model.dart';
+import 'package:project_akhir_donasi_android/models/donasi_model.dart'; // Import Donasi model
 import 'package:project_akhir_donasi_android/dashboard/donasi_detail.dart';
 
 class DonasiSayaPage extends StatefulWidget {
@@ -53,14 +55,21 @@ class _DonasiSayaPageState extends State<DonasiSayaPage> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: donasiList.length,
-                    itemBuilder: (context, index) {
-                      final donasi = donasiList[index];
-                      return DonasiItemCard(donasi: donasi);
-                    },
-                  ),
+                : donasiList.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Anda belum melakukan donasi.',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: donasiList.length,
+                        itemBuilder: (context, index) {
+                          final donasi = donasiList[index];
+                          return DonasiItemCard(donasi: donasi);
+                        },
+                      ),
           ),
         ],
       ),
@@ -232,19 +241,34 @@ class DonasiItemCard extends StatelessWidget {
                 donasi.status,
                 style: TextStyle(
                   fontSize: 12,
-                  color: donasi.status == 'success' ? Colors.green : Colors.orange,
+                  color:
+                      donasi.status == 'success' ? Colors.green : Colors.orange,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DonasiDetailPage(donasi: donasi.toDonasi()),
-                    ),
-                  );
+                onPressed: () async {
+                  final donasiService = DonasiService();
+                  try {
+                    // Mengambil detail kampanye donasi lengkap berdasarkan kategoriDonasiId
+                    final Donasi fullDonasi = await donasiService
+                        .getDonasiById(donasi.kategoriDonasiId);
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DonasiDetailPage(
+                            donasi:
+                                fullDonasi), // Menggunakan objek Donasi lengkap
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Gagal memuat detail kampanye: $e')),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.lightBlue.shade100,

@@ -8,11 +8,11 @@ import 'package:project_akhir_donasi_android/models/notifikasi_model.dart';
 class ApiConfig {
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://localhost:8000"; // Untuk Flutter Web
+      return "http://localhost:8000"; // For Flutter Web
     } else if (Platform.isAndroid) {
-      return "https://jticare.my.id"; // Untuk Android emulator (pastikan ini benar untuk HP asli juga)
+      return "https://jticare.my.id"; // For Android emulator (ensure this is correct for real devices too)
     } else {
-      return "http://localhost:8000"; // Untuk iOS simulator / desktop
+      return "http://localhost:8000"; // For iOS simulator / desktop
     }
   }
 
@@ -20,8 +20,10 @@ class ApiConfig {
     return '$baseUrl/storage/';
   }
 
+  // This method is good for building URLs that start with /api/
   static Uri buildUrl(String endpoint) {
-    endpoint = endpoint.replaceAll(RegExp(r'^/|/$'), '');
+    endpoint = endpoint.replaceAll(
+        RegExp(r'^/|/$'), ''); // Remove leading/trailing slashes
     return Uri.parse('$baseUrl/api/$endpoint');
   }
 
@@ -32,8 +34,11 @@ class ApiConfig {
   static Uri get sendEmailUrl => buildUrl('hubungi-kami');
   static Uri get fetchNotifikasiUrl => buildUrl('transaksi-user');
 
+  // The fetchNotifikasi method should ideally be in a separate service (e.g., NotifikasiService),
+  // but it works here for now.
   static Future<List<NotifikasiModel>> fetchNotifikasi(String token) async {
-    final url = fetchNotifikasiUrl;
+    final url =
+        fetchNotifikasiUrl; // This will correctly resolve to /api/transaksi-user
 
     try {
       final response = await http.get(
@@ -52,7 +57,6 @@ class ApiConfig {
             jsonBody['data'] is List) {
           final List data = jsonBody['data'];
           if (data.isEmpty) {
-            // Jika data kosong tapi status 200, anggap "Data tidak ditemukan"
             throw const NoDonationsFoundException('Data tidak ditemukan');
           }
           return data.map((json) => NotifikasiModel.fromJson(json)).toList();
@@ -63,7 +67,6 @@ class ApiConfig {
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized. Token tidak valid atau kadaluarsa.');
       } else if (response.statusCode == 404) {
-        // Jika API mengembalikan 404, selalu lempar dengan pesan "Data tidak ditemukan"
         throw const NoDonationsFoundException('Data tidak ditemukan');
       } else {
         throw Exception(
