@@ -30,7 +30,6 @@ class ApiConfig {
   static Uri get updateProfileUrl => buildUrl('update-profile');
   static Uri get updateProfileImageUrl => buildUrl('update-profile-image');
   static Uri get ubahPasswordPengaturanAkunUrl => buildUrl('update-password');
-  static Uri get deleteAccountPengaturanAkunUrl => buildUrl('hapus-akun');
   static Uri get sendEmailUrl => buildUrl('hubungi-kami');
   static Uri get fetchNotifikasiUrl => buildUrl('transaksi-user');
 

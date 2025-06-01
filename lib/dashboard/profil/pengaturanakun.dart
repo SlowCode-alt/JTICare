@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/API/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'dart:developer'
+    as developer; // Import developer package for better logging
 
 class PengaturanAkunPage extends StatefulWidget {
   const PengaturanAkunPage({super.key});
@@ -16,9 +18,8 @@ class _PengaturanAkunPageState extends State<PengaturanAkunPage> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _currentPasswordController =
       TextEditingController();
-  final TextEditingController _deleteConfirmController =
-      TextEditingController();
-  bool _isLoading = false;
+  // Removed _deleteConfirmController as delete account section is removed
+  bool _isLoading = false; // State untuk loading umum (ubah password)
 
   @override
   void initState() {
@@ -41,16 +42,12 @@ class _PengaturanAkunPageState extends State<PengaturanAkunPage> {
     final currentPassword = _currentPasswordController.text.trim();
 
     if (newPassword.isEmpty || currentPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Semua kolom harus diisi.")),
-      );
+      _showSnackBar("Semua kolom harus diisi.");
       return;
     }
 
     if (newPassword.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password baru minimal 8 karakter.")),
-      );
+      _showSnackBar("Password baru minimal 8 karakter.");
       return;
     }
 
@@ -61,6 +58,24 @@ class _PengaturanAkunPageState extends State<PengaturanAkunPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
+
+      if (token.isEmpty) {
+        _showSnackBar('Token tidak ditemukan. Silakan login kembali.');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      developer.log(
+          'DEBUG CHANGE PASSWORD: Mengirim POST request ke ${ApiConfig.ubahPasswordPengaturanAkunUrl}',
+          name: 'PengaturanAkun');
+      developer.log('DEBUG CHANGE PASSWORD: Dengan token: $token',
+          name: 'PengaturanAkun');
+      developer.log(
+          'DEBUG CHANGE PASSWORD: Body: ${jsonEncode({
+                'currentPassword': currentPassword,
+                'newPassword': newPassword
+              })}',
+          name: 'PengaturanAkun');
 
       final response = await http.post(
         ApiConfig.ubahPasswordPengaturanAkunUrl,
@@ -74,102 +89,65 @@ class _PengaturanAkunPageState extends State<PengaturanAkunPage> {
         }),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response headers: ${response.headers}');
-      print('Response body: ${response.body}');
+      developer.log(
+          'DEBUG CHANGE PASSWORD: Response Status Code: ${response.statusCode}',
+          name: 'PengaturanAkun');
+      developer.log(
+          'DEBUG CHANGE PASSWORD: Response Body (RAW): "${response.body}"',
+          name: 'PengaturanAkun');
 
       if (response.body.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Response kosong dari server')),
-        );
-        setState(() => _isLoading = false);
+        _showSnackBar('Response kosong dari server saat ubah password');
         return;
       }
 
-      final data = jsonDecode(response.body);
+      Map<String, dynamic> data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (e) {
+        developer.log(
+            'ERROR CHANGE PASSWORD: Gagal mendekode JSON. Body respons tidak valid: "${response.body}"',
+            name: 'PengaturanAkun',
+            error: e);
+        _showSnackBar(
+            'Terjadi kesalahan format data dari server saat ubah password. (Cek log)');
+        return;
+      }
 
       if (response.statusCode == 200 && data['status'] == 'success') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(data['message'] ?? 'Password berhasil diubah')),
-        );
+        _showSnackBar(data['message'] ?? 'Password berhasil diubah');
         _newPasswordController.clear();
         _currentPasswordController.clear();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Gagal mengubah password')),
-        );
+        _showSnackBar(data['message'] ?? 'Gagal mengubah password');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
+      developer.log('ERROR CHANGE PASSWORD: Exception umum: $e',
+          name: 'PengaturanAkun', error: e);
+      _showSnackBar('Terjadi kesalahan: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
-  Future<void> _deleteAccount() async {
-    if (_deleteConfirmController.text != "HAPUS AKUN") {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Teks konfirmasi tidak cocok.")),
-      );
-      return;
-    }
+  // Removed _deleteAccount method as delete account section is removed
 
-    bool confirm = await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Konfirmasi Hapus Akun"),
-        content: const Text(
-            "Apakah Anda yakin ingin menghapus akun ini? Tindakan ini tidak bisa dibatalkan."),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text("Batal")),
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text("Ya, Hapus")),
-        ],
-      ),
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
-
-    if (confirm != true) return;
-
-    try {
-      final response = await http.post(
-        ApiConfig.deleteAccountPengaturanAkunUrl,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _email}),
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear(); // Hapus semua data login
-        if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(
-            context, '/login', (route) => false); // arahkan ke login
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(data['message'] ?? 'Gagal menghapus akun')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
-    }
   }
 
   @override
   void dispose() {
     _newPasswordController.dispose();
     _currentPasswordController.dispose();
-    _deleteConfirmController.dispose();
+    // Removed _deleteConfirmController.dispose()
     super.dispose();
   }
 
@@ -217,45 +195,26 @@ class _PengaturanAkunPageState extends State<PengaturanAkunPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _changePassword,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+              SizedBox(
+                // Wrap with SizedBox to make the button full width
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _changePassword,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Simpan Perubahan",
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Simpan Perubahan",
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 30),
-              const Divider(),
-              const SizedBox(height: 10),
-              const Text("Konfirmasi Hapus Akun",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text(
-                  "Ketik 'HAPUS AKUN' untuk menghapus akun Anda secara permanen.",
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _deleteConfirmController,
-                decoration: const InputDecoration(
-                  hintText: "HAPUS AKUN",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: _deleteAccount,
-                child: const Text("Saya ingin menghapus akun",
-                    style: TextStyle(color: Colors.red)),
-              ),
+              )
             ],
           ),
         ),

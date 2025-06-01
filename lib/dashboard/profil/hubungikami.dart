@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:project_akhir_donasi_android/API/api_config.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 
 class HubungiKamiPage extends StatefulWidget {
   const HubungiKamiPage({super.key});
@@ -15,9 +16,39 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _pesanController = TextEditingController();
+  bool _isLoading = false; // State loading untuk tombol kirim
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // Panggil fungsi untuk memuat data pengguna (email & nama)
+  }
+
+  // Fungsi untuk memuat email dan nama dari SharedPreferences
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userEmail = prefs.getString('email'); // Ambil email
+    final userFullname = prefs.getString('fullname'); // Ambil nama lengkap
+
+    if (mounted) {
+      // Pastikan widget masih mounted sebelum setState
+      setState(() {
+        if (userEmail != null) {
+          _emailController.text = userEmail; // Set nilai email ke controller
+        }
+        if (userFullname != null) {
+          _namaController.text = userFullname; // Set nilai nama ke controller
+        }
+      });
+    }
+  }
 
   void _kirimPesan() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true; // Mulai loading
+      });
+
       try {
         final response = await http.post(
           ApiConfig.sendEmailUrl,
@@ -29,24 +60,48 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
           }),
         );
 
-        if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pesan berhasil dikirim')),
-          );
-          _emailController.clear();
-          _namaController.clear();
-          _pesanController.clear();
+        if (!mounted)
+          return; // Penting: Cek mounted sebelum setState/ScaffoldMessenger
+
+        // Tangani respons kosong
+        if (response.body.isEmpty) {
+          _showSnackBar('Server mengembalikan respons kosong.');
+          return;
+        }
+
+        final Map<String, dynamic> responseData =
+            json.decode(response.body); // Dekode JSON
+
+        if (response.statusCode == 200 && responseData['status'] == 'success') {
+          _showSnackBar(responseData['message'] ?? 'Pesan berhasil dikirim');
+          // Field email dan nama tidak perlu dikosongkan karena otomatis dari profil
+          _pesanController.clear(); // Kosongkan hanya pesan
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gagal mengirim pesan')),
-          );
+          // Tangani error dari server (misal validasi gagal, status 'error')
+          _showSnackBar(responseData['message'] ?? 'Gagal mengirim pesan');
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Terjadi kesalahan: $e')),
-        );
+        // Tangani FormatException atau error jaringan lainnya
+        if (e is FormatException) {
+          _showSnackBar('Terjadi kesalahan format data dari server. (Cek log)');
+        } else {
+          _showSnackBar('Terjadi kesalahan: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Berhenti loading
+          });
+        }
       }
     }
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -85,9 +140,10 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
+                    readOnly: true, // Email hanya bisa dibaca
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Email harus diisi';
+                        return 'Email harus diisi'; // Ini mungkin tidak akan terjadi jika email selalu ada
                       }
                       if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$')
                           .hasMatch(value)) {
@@ -103,6 +159,7 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
                       labelText: 'Nama',
                       border: OutlineInputBorder(),
                     ),
+                    readOnly: true, // Nama hanya bisa dibaca
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Nama harus diisi';
@@ -126,9 +183,24 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _kirimPesan,
-                    child: const Text('Kirim'),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : _kirimPesan, // Nonaktifkan saat loading
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Kirim', style: TextStyle(fontSize: 16)),
+                    ),
                   ),
                 ],
               ),
