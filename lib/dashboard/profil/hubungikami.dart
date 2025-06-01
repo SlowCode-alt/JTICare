@@ -17,34 +17,41 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _pesanController = TextEditingController();
   bool _isLoading = false; // State loading untuk tombol kirim
+  String? _authToken; // Untuk menyimpan token autentikasi
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // Panggil fungsi untuk memuat data pengguna (email & nama)
+    _loadUserDataAndToken(); // Panggil fungsi untuk memuat data pengguna & token
   }
 
-  // Fungsi untuk memuat email dan nama dari SharedPreferences
-  Future<void> _loadUserData() async {
+  // Fungsi untuk memuat email, nama, dan token dari SharedPreferences
+  Future<void> _loadUserDataAndToken() async {
     final prefs = await SharedPreferences.getInstance();
-    final userEmail = prefs.getString('email'); // Ambil email
-    final userFullname = prefs.getString('fullname'); // Ambil nama lengkap
+    final userEmail = prefs.getString('email');
+    final userFullname = prefs.getString('fullname');
+    final token = prefs.getString('token'); // Ambil token
 
     if (mounted) {
-      // Pastikan widget masih mounted sebelum setState
       setState(() {
         if (userEmail != null) {
-          _emailController.text = userEmail; // Set nilai email ke controller
+          _emailController.text = userEmail;
         }
         if (userFullname != null) {
-          _namaController.text = userFullname; // Set nilai nama ke controller
+          _namaController.text = userFullname;
         }
+        _authToken = token; // Simpan token
       });
     }
   }
 
   void _kirimPesan() async {
     if (_formKey.currentState!.validate()) {
+      if (_authToken == null || _authToken!.isEmpty) {
+        _showSnackBar('Anda belum login atau token tidak ditemukan.');
+        return;
+      }
+
       setState(() {
         _isLoading = true; // Mulai loading
       });
@@ -52,40 +59,63 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
       try {
         final response = await http.post(
           ApiConfig.sendEmailUrl,
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_authToken', // Kirim token autentikasi
+            'Accept': 'application/json', // Tambahkan header Accept
+          },
           body: jsonEncode({
-            'email': _emailController.text,
-            'nama': _namaController.text,
+            // 'email': _emailController.text, // TIDAK PERLU DIKIRIM DARI FLUTTER
+            // 'nama': _namaController.text, // TIDAK PERLU DIKIRIM DARI FLUTTER
             'pesan': _pesanController.text,
           }),
         );
 
-        if (!mounted)
-          return; // Penting: Cek mounted sebelum setState/ScaffoldMessenger
+        if (!mounted) return;
 
-        // Tangani respons kosong
+        // Tangani respons kosong atau non-JSON
         if (response.body.isEmpty) {
-          _showSnackBar('Server mengembalikan respons kosong.');
+          if (response.statusCode == 200) {
+            // Jika status 200 tapi body kosong, mungkin ada sesuatu yang tidak biasa tapi sukses
+            _showSnackBar('Pesan berhasil dikirim (respons server kosong).');
+            _pesanController.clear();
+          } else {
+            _showSnackBar(
+                'Server mengembalikan respons kosong atau tidak valid. Status: ${response.statusCode}');
+          }
           return;
         }
 
-        final Map<String, dynamic> responseData =
-            json.decode(response.body); // Dekode JSON
+        // Pastikan respons adalah JSON yang valid
+        Map<String, dynamic> responseData;
+        try {
+          responseData = json.decode(response.body);
+        } catch (e) {
+          _showSnackBar('Gagal mendekode respons server: $e');
+          return;
+        }
 
         if (response.statusCode == 200 && responseData['status'] == 'success') {
           _showSnackBar(responseData['message'] ?? 'Pesan berhasil dikirim');
-          // Field email dan nama tidak perlu dikosongkan karena otomatis dari profil
-          _pesanController.clear(); // Kosongkan hanya pesan
+          _pesanController.clear();
         } else {
           // Tangani error dari server (misal validasi gagal, status 'error')
+          // Log respons body lengkap untuk debugging
+          print('Error Response Body: ${response.body}');
           _showSnackBar(responseData['message'] ?? 'Gagal mengirim pesan');
         }
       } catch (e) {
         // Tangani FormatException atau error jaringan lainnya
         if (e is FormatException) {
           _showSnackBar('Terjadi kesalahan format data dari server. (Cek log)');
+          print('FormatException: $e');
+        } else if (e is http.ClientException) {
+          _showSnackBar(
+              'Gagal terhubung ke server. Periksa koneksi internet atau URL API.');
+          print('ClientException: $e');
         } else {
-          _showSnackBar('Terjadi kesalahan: $e');
+          _showSnackBar('Terjadi kesalahan tidak terduga: $e');
+          print('Unexpected Error: $e');
         }
       } finally {
         if (mounted) {
@@ -143,7 +173,7 @@ class _HubungiKamiPageState extends State<HubungiKamiPage> {
                     readOnly: true, // Email hanya bisa dibaca
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Email harus diisi'; // Ini mungkin tidak akan terjadi jika email selalu ada
+                        return 'Email harus diisi';
                       }
                       if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$')
                           .hasMatch(value)) {
