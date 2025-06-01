@@ -1,10 +1,72 @@
 import 'package:flutter/material.dart';
-import 'otp_screen.dart';
+import '../api/auth_service.dart'; // Import service
+import '/login.dart'; // Import halaman login
 
-class ForgotPasswordScreen extends StatelessWidget {
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
+
+  @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  ForgotPasswordScreen({super.key});
+  Future<void> _sendResetLink() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      setState(() {
+        _errorMessage = 'Email harus diisi';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response = await AuthService.sendResetLink(email);
+
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        // Tampilkan snackbar feedback sukses
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message']),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        
+        // Kembali ke halaman login setelah delay singkat
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        });
+      } else {
+        setState(() {
+          _errorMessage = response['message'] ?? 'Gagal mengirim reset link';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Terjadi kesalahan: ${e.toString()}';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,26 +82,26 @@ class ForgotPasswordScreen extends StatelessWidget {
                   Image.asset('assets/jticarebiru.png', height: 100),
                   const SizedBox(height: 20),
                   const Text("Lupa Kata Sandi",
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   const Text(
-                      "Masukkan Email Anda dan tunggu kode OTP dikirimkan",
+                      "Masukkan Email Anda untuk mendapatkan link reset password",
                       textAlign: TextAlign.center),
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       hintText: "Masukkan Email Anda",
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10)),
+                      errorText: _errorMessage,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          // Tombol di bagian bawah layar
           Padding(
             padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
             child: Row(
@@ -94,12 +156,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                       ],
                     ),
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => OtpScreen()),
-                        );
-                      },
+                      onPressed: _isLoading ? null : _sendResetLink,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
@@ -108,13 +165,15 @@ class ForgotPasswordScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: const Text(
-                        "Kirim",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Kirim",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
                     ),
                   ),
                 ),
