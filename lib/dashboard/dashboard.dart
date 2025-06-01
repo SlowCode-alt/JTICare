@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_akhir_donasi_android/API/api_config.dart';
+import 'package:project_akhir_donasi_android/dashboard/notification/notification.dart';
 import 'package:project_akhir_donasi_android/dashboard/profil/profil.dart';
 import 'package:project_akhir_donasi_android/dashboard/donasi_saya/donasisaya.dart';
 import '../models/donasi_model.dart';
@@ -183,7 +184,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 1:
         return const DonasiSayaPage();
       case 2:
-        return const Center(child: Text("Notifikasi"));
+        return const NotifikasiScreen(); // Pastikan NotificationScreen sudah diimport
       case 3:
         return const ProfileScreen();
       default:
@@ -278,8 +279,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           // Konten di bawah kartu, diberi padding agar tidak tumpang tindih
           Padding(
-            padding: const EdgeInsets.only(
-                top: 20), // Jarak setelah kartu tumpang tindih
+            padding: const EdgeInsets.only(top: 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -290,7 +290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 1),
                 // Conditional rendering untuk loading, error, atau data kosong
                 if (isLoading)
                   const Center(child: CircularProgressIndicator())
