@@ -15,6 +15,7 @@ class DonasiSayaPage extends StatefulWidget {
 class _DonasiSayaPageState extends State<DonasiSayaPage> {
   List<DonasiSaya> donasiList = [];
   double totalDonasi = 0;
+  int jumlahDonasi = 0;
   bool isLoading = true;
 
   @override
@@ -32,7 +33,12 @@ class _DonasiSayaPageState extends State<DonasiSayaPage> {
         donasiList = (result['data'] as List)
             .map((json) => DonasiSaya.fromJson(json))
             .toList();
-        totalDonasi = donasiList.fold(0, (sum, item) => sum + item.nominal);
+        
+        final successDonations = donasiList.where((d) => d.status == 'success').toList();
+        
+        totalDonasi = successDonations.fold(0, (sum, item) => sum + item.nominal);
+        jumlahDonasi = successDonations.length;
+        
         isLoading = false;
       });
     } else {
@@ -50,7 +56,7 @@ class _DonasiSayaPageState extends State<DonasiSayaPage> {
         children: [
           DonasiSayaHeader(
             totalDonasi: totalDonasi,
-            jumlahDonasi: donasiList.length,
+            jumlahDonasi: jumlahDonasi,
           ),
           Expanded(
             child: isLoading
@@ -62,14 +68,21 @@ class _DonasiSayaPageState extends State<DonasiSayaPage> {
                           style: TextStyle(fontSize: 16, color: Colors.grey),
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: donasiList.length,
-                        itemBuilder: (context, index) {
-                          final donasi = donasiList[index];
-                          return DonasiItemCard(donasi: donasi);
-                        },
-                      ),
+                    : jumlahDonasi == 0
+                        ? const Center(
+                            child: Text(
+                              'Tidak ada donasi yang berhasil',
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: donasiList.length,
+                            itemBuilder: (context, index) {
+                              final donasi = donasiList[index];
+                              return DonasiItemCard(donasi: donasi);
+                            },
+                          ),
           ),
         ],
       ),

@@ -400,14 +400,7 @@ class _DonasiScreenState extends State<DonasiScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Payment Methods
-                  const Text(
-                    'Pilih Metode Pembayaran',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  
                   const SizedBox(height: 16),
 
                   // Donate Button
